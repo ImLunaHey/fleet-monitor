@@ -1,3 +1,4 @@
+import type { Metrics, HistoryPoint } from "../types";
 import { bytes, colors, finite, fmt, gib } from "../format";
 import { HistoryChart } from "./HistoryChart";
 import { GpuPanel } from "./GpuPanel";
@@ -10,14 +11,19 @@ export function MachineCard({
   history,
   featured = false,
   now,
+}: {
+  name: string;
+  metrics: Metrics;
+  history?: HistoryPoint[];
+  featured?: boolean;
+  now: number;
 }) {
   const gpuUnavailable = finite(d.gpu?.usage)
     ? null
     : d.gpu?.status === "absent"
       ? "No hardware GPU"
       : d.gpu?.reason || "GPU readings unavailable";
-  const pressure =
-    d.disk.percent >= 95 ? "bad" : d.disk.percent >= 85 ? "warn" : "";
+  const pressure = d.disk.percent >= 95 ? "bad" : d.disk.percent >= 85 ? "warn" : "";
   const minutes = Math.floor(d.uptime / 60);
   const services = Object.entries(d.services || {})
     .map(([label, healthy]) => `${label} ${healthy ? "online" : "unavailable"}`)
@@ -51,11 +57,7 @@ export function MachineCard({
       </div>
       <div className="graphs">
         <HistoryChart kind="cpu" history={history} />
-        <HistoryChart
-          kind="gpu"
-          history={history}
-          unavailable={gpuUnavailable}
-        />
+        <HistoryChart kind="gpu" history={history} unavailable={gpuUnavailable} />
         <HistoryChart kind="network" history={history} network={d.network} />
       </div>
       <GpuPanel gpu={d.gpu} />
@@ -70,11 +72,7 @@ export function MachineCard({
             label="Disk used"
             value={d.disk.percent}
             color={
-              pressure === "bad"
-                ? colors.red
-                : pressure === "warn"
-                  ? colors.amber
-                  : colors.blue
+              pressure === "bad" ? colors.red : pressure === "warn" ? colors.amber : colors.blue
             }
           />
           <StatRow label="Disk read / write">
@@ -83,9 +81,7 @@ export function MachineCard({
               : "Reading unavailable"}
           </StatRow>
           <StatRow label="Disk IOPS">
-            {finite(d.disk.iops)
-              ? `${fmt(d.disk.iops, 1)} operations/s`
-              : "Reading unavailable"}
+            {finite(d.disk.iops) ? `${fmt(d.disk.iops, 1)} operations/s` : "Reading unavailable"}
           </StatRow>
         </div>
       )}

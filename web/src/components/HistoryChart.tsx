@@ -1,15 +1,18 @@
+import type { HistoryPoint, Network } from "../types";
+type Series = "cpu" | "gpu" | "rx" | "tx";
 import { finite, fmt, colors, bytes } from "../format";
-export function chartPath(history, key, max) {
-  if (!history.length) return "";
+export function chartPath(history: HistoryPoint[], key: Series, max: number) {
+  const last = history.at(-1);
+  if (!last) return "";
   let path = "",
-    previous = null;
+    previous: number | null = null;
   for (const point of history) {
     const value = point[key];
     if (!finite(value)) {
       previous = null;
       continue;
     }
-    const x = 600 - (history.at(-1).t - point.t) * 5;
+    const x = 600 - (last.t - point.t) * 5;
     const y = 98 - Math.max(0, Math.min(1, value / max)) * 96;
     path += `${previous !== null && point.t - previous < 10 ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)} `;
     previous = point.t;
@@ -21,32 +24,22 @@ export function HistoryChart({
   history = [],
   unavailable,
   network = {},
+}: {
+  kind: "cpu" | "gpu" | "network";
+  history?: HistoryPoint[];
+  unavailable?: string | null;
+  network?: Network;
 }) {
   const isNetwork = kind === "network";
   const max = isNetwork
     ? Math.max(1024, ...history.flatMap((p) => [p.rx, p.tx]).filter(finite))
     : 100;
-  const scale =
-    max >= 1073741824
-      ? 1073741824
-      : max >= 1048576
-        ? 1048576
-        : max >= 1024
-          ? 1024
-          : 1;
+  const scale = max >= 1073741824 ? 1073741824 : max >= 1048576 ? 1048576 : max >= 1024 ? 1024 : 1;
   const unit =
-    scale === 1073741824
-      ? "GiB/s"
-      : scale === 1048576
-        ? "MiB/s"
-        : scale === 1024
-          ? "KiB/s"
-          : "B/s";
-  const tick = (n) =>
-    isNetwork
-      ? `${fmt(n / scale, n === 0 || n / scale >= 10 ? 0 : 1)} ${unit}`
-      : `${fmt(n)}%`;
-  const lines = isNetwork
+    scale === 1073741824 ? "GiB/s" : scale === 1048576 ? "MiB/s" : scale === 1024 ? "KiB/s" : "B/s";
+  const tick = (n: number) =>
+    isNetwork ? `${fmt(n / scale, n === 0 || n / scale >= 10 ? 0 : 1)} ${unit}` : `${fmt(n)}%`;
+  const lines: [Series, string][] = isNetwork
     ? [
         ["rx", colors.blue],
         ["tx", colors.orange],
@@ -85,17 +78,12 @@ export function HistoryChart({
             <path key={y} className="gridline" d={`M0 ${y}H600`} />
           ))}
           {lines.map(([key, color]) => (
-            <path
-              key={key}
-              className="line"
-              stroke={color}
-              d={chartPath(history, key, max)}
-            />
+            <path key={key} className="line" stroke={color} d={chartPath(history, key, max)} />
           ))}
         </svg>
-        <div className={`y-axis ${isNetwork ? "" : "percent-axis"}`}>
-          {[max, max / 2, 0].map((n, i) => (
-            <span key={i}>{tick(n)}</span>
+        <div className="y-axis">
+          {[max, max / 2, 0].map((n) => (
+            <span key={n}>{tick(n)}</span>
           ))}
         </div>
         <div className="x-axis">

@@ -38,7 +38,7 @@ services.fleet-monitor = {
   allowedClients = [ "127.0.0.1" "192.0.2.20" ]; # dashboard host
   interface = "enp1s0"; # optional; otherwise follows the default IPv4 route
   openFirewall = true;
-  # intelGPU = true; # Intel i915 counters; adds CAP_PERFMON to this service
+  # intelGPU = true; # i915 counters + a separate read-only memory probe
   # amdGpuName = "Radeon integrated GPU";
   # zfsPool = "tank";
 };
@@ -92,8 +92,15 @@ on a Mac; automatic fullscreen kiosk setup is NixOS-only.
   `nvidia-smi`. Set `environment.NVIDIA_SMI` to its absolute path on NixOS.
 - AMD: sysfs load, reserved UMA, temperature and clocks when `amdGpuName` is
   configured. This reader currently targets integrated Radeon graphics.
-- Intel i915: busiest-engine utilization and clocks; shared-memory usage is
-  explicitly unavailable. Intel Xe counters are not supported yet.
+- Intel i915: busiest-engine utilization, clocks, and GPU client RAM. Enabling
+  `intelGPU` gives the HTTP collector CAP_PERFMON and starts a separate root
+  oneshot probe every five seconds to read DRM debugfs and process fdinfo.
+  The collector consumes its timestamped JSON without gaining proc/debugfs
+  privileges. Repeated file descriptors are deduplicated by DRM client ID;
+  kernel buffers are excluded, and buffers shared across clients may be counted
+  per client. There is no invented fixed VRAM capacity. Unreadable, incomplete,
+  or stale samples remain unavailable; no active clients reports zero.
+  Intel Xe counters are not supported yet.
 - Apple silicon: AGX utilization/shared RAM and SMC average CPU/GPU sensor
   temperatures. Apple GPUs use system memory rather than dedicated VRAM.
   SMC sensor families follow the approach documented by
@@ -135,15 +142,21 @@ only configured peers. Reads use GET; other methods are rejected.
 ```sh
 nix develop
 (cd collector && go test ./... && go vet ./...)
-(cd web && npm ci && npm test && npm run build)
+(cd web && npm ci && npm run check)
 nix build .#collector .#dashboard
 ```
 
-The React components are in `web/src/components`. Tests cover missing/stale
+The strict TypeScript/TSX React components are in `web/src/components`.
+`npm run check` runs TypeScript, Oxlint with React Doctor rules, Oxfmt, Vitest
+coverage, and the production build. Use `npm run format` to apply formatting.
+Tests cover missing/stale
 hosts, replacement drives, axes/history gaps, GPU memory, battery states and
 capacity display. Collector tests cover ZFS parsing, counter resets, APFS
-mapping, sensor validation and battery parsing. Nix dashboard builds run the
-component tests. Package and npm dependencies are locked; after dependency
+mapping, sensor validation, battery parsing, and Intel memory accounting.
+Nix dashboard builds also run the type, lint, formatting, and coverage checks.
+Coverage gates apply per source file (90% lines/statements/functions, 85%
+branches); only bootstrap, types, fixtures, and test setup are excluded.
+Package and npm dependencies are locked; after dependency
 changes update `npmDepsHash` in `nix/dashboard.nix` using Nix's reported hash.
 
 For a non-Nix build, build the Go executable in `collector`, run `npm run build`

@@ -265,11 +265,7 @@ h3 {
   color: var(--orange);
 }
 .busy-cell {
-  background-image: linear-gradient(
-    to right,
-    #b9a2e81c var(--fill),
-    transparent var(--fill)
-  );
+  background-image: linear-gradient(to right, #b9a2e81c var(--fill), transparent var(--fill));
   color: var(--purple);
 }
 .scan-progress {
@@ -553,15 +549,23 @@ h3 {
   background: currentColor;
   border-radius: 1px;
 }
-.y-axis.percent-axis {
-  font-size: 12px;
-}
-.network .y-axis {
-  font-size: 14px;
-}
 .scan-progress {
   flex-shrink: 0;
 }
 .featured-host .machine:not(:has(.compact-zfs)) .details {
   display: flex;
+}
+
+.zfs-table[aria-label="ZFS drives"] th:nth-child(2),
+.zfs-table[aria-label="ZFS drives"] td:nth-child(2),
+.zfs-table[aria-label="ZFS drives"] th:nth-child(3),
+.zfs-table[aria-label="ZFS drives"] td:nth-child(3) {
+  text-align: left;
+}
+.zfs-table[aria-label="ZFS drives"] th:nth-child(4),
+.zfs-table[aria-label="ZFS drives"] td:nth-child(4) {
+  text-align: center;
+}
+.replacement {
+  color: #b9a2e8;
 }

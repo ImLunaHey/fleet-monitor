@@ -1,3 +1,4 @@
+import type { Fleet, FleetConfig, Histories } from "./types";
 import { useEffect, useState } from "react";
 import { useFleet } from "./fleet";
 import { online, bytes, fmt } from "./format";
@@ -7,51 +8,49 @@ export function Dashboard({
   config = {},
   histories = {},
   error = false,
-  now = Date.now() / 1000,
+  now,
+}: {
+  fleet: Fleet;
+  config?: FleetConfig;
+  histories?: Histories;
+  error?: boolean;
+  now: number;
 }) {
-  const order = [
-    ...new Set([...(config.order || []), ...Object.keys(fleet)]),
-  ].filter((name) => fleet[name]);
+  const order = [...new Set([...(config.order || []), ...Object.keys(fleet)])].filter(
+    (name) => fleet[name],
+  );
   const compact = new Set(config.compactHosts || []),
     featured = config.featuredHost;
   const live = order.filter((name) => online(fleet[name], now));
-  const regular = live.filter(
-    (name) => name !== featured && !compact.has(name),
-  );
-  const offline = order.filter(
-    (name) => !online(fleet[name], now) && !compact.has(name),
-  );
+  const regular = live.filter((name) => name !== featured && !compact.has(name));
+  const offline = order.filter((name) => !online(fleet[name], now) && !compact.has(name));
   return (
     <main>
       <header>
         <div>
-          <div className="eyebrow">
-            {config.title || "Fleet Monitor"} / live system overview
-          </div>
+          <div className="eyebrow">{config.title || "Fleet Monitor"} / live system overview</div>
           <h1>Machines</h1>
         </div>
-        <div className="clock">
-          {new Date(now * 1000).toLocaleString("en-GB")}
-        </div>
+        <div className="clock">{new Date(now * 1000).toLocaleString("en-GB")}</div>
       </header>
-      <div
-        className="wall"
-        style={!featured ? { gridTemplateColumns: "1fr" } : undefined}
-      >
+      <div className="wall" style={!featured ? { gridTemplateColumns: "1fr" } : undefined}>
         <section className="machines" aria-label="Machines">
-          {regular.map((name) => (
-            <MachineCard
-              key={name}
-              name={name}
-              metrics={fleet[name].metrics}
-              history={histories[name]}
-              now={now}
-            />
-          ))}
+          {regular.map((name) => {
+            const host = fleet[name];
+            return online(host, now) ? (
+              <MachineCard
+                key={name}
+                name={name}
+                metrics={host.metrics}
+                history={histories[name]}
+                now={now}
+              />
+            ) : null;
+          })}
         </section>
         {featured && (
           <section className="featured-host" aria-label="Featured machine">
-            {live.includes(featured) && (
+            {online(fleet[featured], now) && (
               <MachineCard
                 name={featured}
                 metrics={fleet[featured].metrics}
@@ -70,23 +69,19 @@ export function Dashboard({
           ))}
         </div>
         {[...compact].map((name) => {
-          const d = fleet[name]?.metrics,
-            isOnline = online(fleet[name], now);
+          const host = fleet[name];
+          const isOnline = online(host, now);
+          const d = isOnline ? host.metrics : undefined;
           return (
-            <span
-              key={name}
-              className={`compact-status ${isOnline ? "online" : ""}`}
-            >
-              {isOnline
+            <span key={name} className={`compact-status ${isOnline ? "online" : ""}`}>
+              {d
                 ? `● ${name} online · CPU ${fmt(d.cpu.usage, 1)}% · RAM ${bytes(d.memory.used)} / ${bytes(d.memory.total)} · Disk ${bytes(d.disk.used)} / ${bytes(d.disk.total)}`
                 : `${name} · offline`}
             </span>
           );
         })}
         <span>
-          {error
-            ? "Telemetry connection lost"
-            : `${live.length} / ${order.length} machines online`}
+          {error ? "Telemetry connection lost" : `${live.length} / ${order.length} machines online`}
         </span>
         <span>Live · refreshes automatically</span>
       </div>
@@ -95,7 +90,7 @@ export function Dashboard({
 }
 export default function App() {
   const data = useFleet();
-  const [now, setNow] = useState(Date.now() / 1000);
+  const [now, setNow] = useState(() => Date.now() / 1000);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now() / 1000), 1000);
     return () => clearInterval(timer);

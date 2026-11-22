@@ -1,3 +1,4 @@
+import type { Histories } from "../types";
 import { describe, it, expect } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { Dashboard } from "../App";
@@ -6,32 +7,7 @@ import { GpuPanel } from "./GpuPanel";
 import { BatteryStatus } from "./BatteryStatus";
 import { ZfsPanel } from "./ZfsPanel";
 import { appendHistory } from "../fleet";
-const now = 1000;
-const metrics = () => ({
-  timestamp: now,
-  cpu_name: "Example CPU",
-  cpu: { usage: 25, temperature: 55 },
-  memory: { used: 8 * 2 ** 30, total: 16 * 2 ** 30 },
-  disk: {
-    used: 100 * 2 ** 30,
-    total: 500 * 2 ** 30,
-    free: 400 * 2 ** 30,
-    percent: 20,
-    read: 1024,
-    write: 2048,
-    iops: 10,
-  },
-  network: { download: 2048, upload: 1024, address: "192.0.2.1" },
-  uptime: 3600,
-  gpu: {
-    name: "Example GPU",
-    usage: 0,
-    kind: "discrete",
-    memory_used: 4096,
-    memory_total: 8192,
-  },
-  services: {},
-});
+import { now, metrics } from "../test-fixtures";
 describe("fleet display", () => {
   it("keeps offline hosts compact and ages stale readings out", () => {
     render(
@@ -72,16 +48,11 @@ describe("fleet display", () => {
     expect(screen.queryByText("RAM used / total")).not.toBeInTheDocument();
     expect(screen.getByText("Disk read / write")).toBeInTheDocument();
     expect(screen.getByText("1.0 KiB/s · 2.0 KiB/s")).toBeInTheDocument();
-    expect(screen.getByLabelText("Battery")).toHaveTextContent(
-      "80% · Plugged in · not charging",
-    );
+    expect(screen.getByLabelText("Battery")).toHaveTextContent("80% · Plugged in · not charging");
   });
   it("uses the featured column without moving the other cards", () => {
     const fleet = Object.fromEntries(
-      ["a", "b", "c", "d", "nas"].map((name) => [
-        name,
-        { online: true, metrics: metrics() },
-      ]),
+      ["a", "b", "c", "d", "nas"].map((name) => [name, { online: true, metrics: metrics() }]),
     );
     render(
       <Dashboard
@@ -91,14 +62,10 @@ describe("fleet display", () => {
       />,
     );
     expect(
-      within(screen.getByRole("region", { name: "Machines" })).getAllByRole(
-        "article",
-      ),
+      within(screen.getByRole("region", { name: "Machines" })).getAllByRole("article"),
     ).toHaveLength(4);
     expect(
-      within(
-        screen.getByRole("region", { name: "Featured machine" }),
-      ).getByRole("article"),
+      within(screen.getByRole("region", { name: "Featured machine" })).getByRole("article"),
     ).toHaveAttribute("aria-label", "nas machine");
   });
 });
@@ -111,12 +78,7 @@ describe("graphs and GPU memory", () => {
     expect(screen.getByText("Now")).toBeInTheDocument();
   });
   it("labels network axes with the actual scale", () => {
-    render(
-      <HistoryChart
-        kind="network"
-        history={[{ t: now, rx: 2 * 1048576, tx: 1024 }]}
-      />,
-    );
+    render(<HistoryChart kind="network" history={[{ t: now, rx: 2 * 1048576, tx: 1024 }]} />);
     expect(screen.getByText("2.0 MiB/s")).toBeInTheDocument();
     expect(screen.queryByText("100%")).not.toBeInTheDocument();
   });
@@ -140,9 +102,7 @@ describe("graphs and GPU memory", () => {
     expect(screen.getByText("4.0 / 8.0 GiB")).toBeInTheDocument();
     expect(screen.getByRole("meter")).toHaveAttribute("aria-valuenow", "50");
     rerender(<GpuPanel gpu={{ name: "Intel GPU", kind: "integrated" }} />);
-    expect(
-      screen.getByText("Shared system RAM · usage unavailable"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Shared system RAM · usage unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("meter")).not.toBeInTheDocument();
   });
   it("does not add a battery to desktop machines", () => {
@@ -150,7 +110,7 @@ describe("graphs and GPU memory", () => {
     expect(container).toBeEmptyDOMElement();
   });
   it("bounds and deduplicates history without inventing GPU readings", () => {
-    let h = {
+    let h: Histories = {
       host: [
         { t: 1, cpu: 1 },
         { t: now - 1, cpu: 2 },
@@ -161,7 +121,7 @@ describe("graphs and GPU memory", () => {
     };
     h = appendHistory(h, fleet);
     expect(h.host).toHaveLength(2);
-    expect(h.host.at(-1).gpu).toBeNull();
+    expect(h.host.at(-1)?.gpu).toBeNull();
     expect(appendHistory(h, fleet).host).toHaveLength(2);
   });
 });
@@ -212,9 +172,10 @@ describe("ZFS", () => {
     expect(screen.getByText("90%")).toHaveClass("warn");
     expect(screen.getAllByText("2")).toHaveLength(2);
     expect(screen.getByText("2.0 KiB")).toHaveClass("write-rate");
-    expect(
-      screen.getByRole("meter", { name: "Rebuild progress" }),
-    ).toHaveAttribute("aria-valuenow", "95");
+    expect(screen.getByRole("meter", { name: "Rebuild progress" })).toHaveAttribute(
+      "aria-valuenow",
+      "95",
+    );
   });
   it("does not show old pool readings as current", () => {
     render(<ZfsPanel zfs={{ ...z, timestamp: 900 }} now={now} />);

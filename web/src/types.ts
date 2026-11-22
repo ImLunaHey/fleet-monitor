@@ -1,0 +1,106 @@
+export type Reading = number | null;
+export interface Gpu {
+  name: string;
+  kind?: string;
+  status?: string;
+  reason?: string;
+  usage?: Reading;
+  temperature?: Reading;
+  power?: Reading;
+  core_clock?: Reading;
+  memory_used?: Reading;
+  memory_total?: Reading;
+  memory_label?: string;
+  memory_note?: string;
+}
+export interface Battery {
+  percent?: Reading;
+  status: string;
+  plugged_in?: boolean;
+  charging?: boolean;
+  minutes_remaining?: Reading;
+}
+export interface Network {
+  download?: Reading;
+  upload?: Reading;
+  address?: string;
+}
+export interface Drive {
+  port?: number | null;
+  name: string;
+  path?: string;
+  device?: string;
+  state: string;
+  replacing?: boolean;
+  missing?: number | boolean | null;
+  size?: Reading;
+  temperature?: Reading;
+  read?: Reading;
+  write?: Reading;
+  iops?: Reading;
+  busy?: Reading;
+  read_errors?: Reading;
+  write_errors?: Reading;
+  checksum_errors?: Reading;
+}
+export interface Dataset {
+  name: string;
+  used: number;
+  available: number;
+}
+export interface Zfs {
+  available: boolean;
+  timestamp?: number;
+  name?: string;
+  state?: string;
+  raw_used?: Reading;
+  raw_total?: Reading;
+  data_errors?: Reading;
+  read_errors?: Reading;
+  write_errors?: Reading;
+  checksum_errors?: Reading;
+  scan?: { state?: string; function?: string };
+  scan_percent?: Reading;
+  drives?: Drive[];
+  datasets?: Dataset[];
+}
+export interface Metrics {
+  timestamp: number;
+  cpu_name: string;
+  uptime: number;
+  cpu: { usage?: Reading; temperature?: Reading };
+  memory: { used: number; total: number };
+  disk: {
+    used: number;
+    total: number;
+    free: number;
+    percent: number;
+    read?: Reading;
+    write?: Reading;
+    iops?: Reading;
+  };
+  network: Network;
+  gpu?: Gpu | null;
+  battery?: Battery | null;
+  zfs?: Zfs;
+  services?: Record<string, boolean>;
+}
+export interface Host {
+  online: boolean;
+  metrics?: Metrics;
+}
+export type Fleet = Record<string, Host>;
+export interface FleetConfig {
+  title?: string;
+  order?: string[];
+  featuredHost?: string;
+  compactHosts?: string[];
+}
+export interface HistoryPoint {
+  t: number;
+  cpu?: Reading;
+  gpu?: Reading;
+  rx?: Reading;
+  tx?: Reading;
+}
+export type Histories = Record<string, HistoryPoint[]>;

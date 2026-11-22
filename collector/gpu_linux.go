@@ -92,6 +92,7 @@ func otherGPU() M {
 		switch strings.TrimSpace(string(vendor)) {
 		case "0x8086":
 			usage, eng := intelUsage()
+			used, memoryNote := intelMemory()
 			cards, _ := filepath.Glob(p + "/drm/card[0-9]*")
 			var clock any
 			for _, card := range cards {
@@ -100,7 +101,7 @@ func otherGPU() M {
 					break
 				}
 			}
-			return M{"status": "present", "name": env("INTEL_GPU_NAME", "Intel integrated GPU"), "kind": "integrated", "usage": usage, "engines": eng, "core_clock": clock, "memory_label": "Shared RAM"}
+			return M{"status": "present", "name": env("INTEL_GPU_NAME", "Intel integrated GPU"), "kind": "integrated", "usage": usage, "engines": eng, "core_clock": clock, "memory_label": "GPU client RAM", "memory_used": used, "memory_note": memoryNote}
 		case "0x10de":
 			found["name"] = "NVIDIA GPU"
 		case "0x1002":

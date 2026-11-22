@@ -426,6 +426,9 @@ func collectZFS() (M, error) {
 	return data, nil
 }
 func main() {
+	if runGPUProbe() {
+		return
+	}
 	_ = json.Unmarshal([]byte(env("DASHBOARD_PEERS", "{}")), &peerURLs)
 	go sample()
 	if os.Getenv("METRICS_ZFS_POOL") != "" {

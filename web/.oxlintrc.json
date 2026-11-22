@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y", "vitest"],
+  "jsPlugins": [
+    {
+      "name": "react-doctor",
+      "specifier": "oxlint-plugin-react-doctor"
+    }
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": ["node_modules/**", "dist/**", "coverage/**"],
+  "rules": {
+    "react-doctor/rules-of-hooks": "error",
+    "react-doctor/exhaustive-deps": "error",
+    "react-doctor/no-fetch-in-effect": "error",
+    "react-doctor/no-derived-state-effect": "error",
+    "react-doctor/no-derived-state": "error",
+    "react-doctor/effect-needs-cleanup": "error",
+    "react-doctor/no-array-index-as-key": "error",
+    "react-doctor/no-direct-mutation-state": "error",
+    "react-doctor/no-nested-component-definition": "error",
+    "react-doctor/no-giant-component": "error",
+    "react-doctor/tanstack-table-no-unstable-data-or-columns": "error",
+    "react-doctor/data-table-requires-accessible-name": "error",
+    "react-doctor/no-danger": "error",
+    "react-doctor/jsx-key": "error",
+    "react-doctor/role-has-required-aria-props": "error",
+    "react-doctor/no-invalid-progress-range": "error"
+  }
+}

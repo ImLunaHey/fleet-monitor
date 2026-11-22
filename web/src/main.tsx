@@ -4,7 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./styles.css";
 const client = new QueryClient();
-createRoot(document.getElementById("root")).render(
+const root = document.getElementById("root");
+if (!root) throw new Error("Dashboard root element missing");
+createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={client}>
       <App />

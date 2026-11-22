@@ -1,6 +1,7 @@
+import type { Battery } from "../types";
 import { finite, fmt } from "../format";
-export function BatteryStatus({ battery }) {
-  if (!finite(battery?.percent)) return null;
+export function BatteryStatus({ battery }: { battery?: Battery | null }) {
+  if (!battery || !finite(battery.percent)) return null;
   const tone = battery.percent <= 20 && !battery.plugged_in ? "warn" : "";
   const remaining = finite(battery.minutes_remaining)
     ? ` · ${Math.floor(battery.minutes_remaining / 60)}h ${battery.minutes_remaining % 60}m ${battery.charging ? "to full" : "remaining"}`

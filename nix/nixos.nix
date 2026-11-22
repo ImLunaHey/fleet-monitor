@@ -29,7 +29,9 @@ in {
     systemd.services.fleet-monitor = {
       description = "Fleet Monitor hardware telemetry";
       wantedBy = [ "multi-user.target" ]; after = [ "network-online.target" ]; wants = [ "network-online.target" ];
-      environment = import ./environment.nix { inherit cfg lib pkgs; };
+      environment = (import ./environment.nix { inherit cfg lib pkgs; }) // lib.optionalAttrs cfg.intelGPU {
+        METRICS_INTEL_MEMORY_FILE = "/run/fleet-monitor-intel/memory.json";
+      };
       serviceConfig = {
         ExecStart = lib.getExe cfg.package; DynamicUser = true; Restart = "always"; RestartSec = "5s";
         NoNewPrivileges = true; ProtectSystem = "strict"; ProtectHome = true; PrivateTmp = true;
@@ -38,7 +40,28 @@ in {
       };
       unitConfig.StartLimitIntervalSec = 0;
     };
-  } (lib.mkIf cfg.kiosk.enable {
+  } (lib.mkIf cfg.intelGPU {
+    # Keep proc/debugfs access in a short-lived probe, out of the HTTP service.
+    systemd.services.fleet-monitor-intel-memory = {
+      description = "Read Intel DRM client memory counters";
+      serviceConfig = {
+        Type = "oneshot"; User = "root"; RuntimeDirectory = "fleet-monitor-intel";
+        RuntimeDirectoryPreserve = true; RuntimeDirectoryMode = "0755";
+        ProtectSystem = "strict"; ProtectHome = true; PrivateTmp = true;
+        NoNewPrivileges = true; RestrictAddressFamilies = [ "AF_UNIX" ];
+        TimeoutStartSec = "8s";
+      };
+      script = ''
+        umask 022
+        ${lib.getExe cfg.package} --intel-memory-probe > /run/fleet-monitor-intel/memory.json.tmp
+        mv /run/fleet-monitor-intel/memory.json.tmp /run/fleet-monitor-intel/memory.json
+      '';
+    };
+    systemd.timers.fleet-monitor-intel-memory = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = { OnBootSec = "5s"; OnUnitInactiveSec = "5s"; AccuracySec = "1s"; };
+    };
+  }) (lib.mkIf cfg.kiosk.enable {
     boot.kernelParams = [ "consoleblank=0" ];
     fonts.packages = [ pkgs.inter ];
     users.groups.fleet-monitor-kiosk = { };
