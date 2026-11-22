@@ -78,7 +78,7 @@ const driveColumns = [
       {d.state === "CANT_OPEN" ? "MISSING" : d.state}
     </span>
   )),
-  driveColumn("size", "Size", "8%", (d) => bytes(d.size)),
+  driveColumn("size", "Size", "9%", (d) => bytes(d.size)),
   driveColumn("temperature", "°C", "5%", (d) => (
     <span
       className={
@@ -94,7 +94,7 @@ const driveColumns = [
       {fmt(d.temperature)}
     </span>
   )),
-  driveColumn("read", "Read/s", "10%", (d) => <span className="read-rate">{bytes(d.read)}</span>),
+  driveColumn("read", "Read/s", "9%", (d) => <span className="read-rate">{bytes(d.read)}</span>),
   driveColumn("write", "Write/s", "10%", (d) => (
     <span className="write-rate">{bytes(d.write)}</span>
   )),
