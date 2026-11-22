@@ -60,25 +60,25 @@ const column = <T,>(
 const driveColumn = column<Drive>;
 const datasetColumn = column<Dataset>;
 const driveColumns = [
-  driveColumn("port", "Port", "5%", (d) => d.port ?? "—"),
-  driveColumn("device", "Device", "8%", (d) => d.device || "—"),
-  driveColumn("id", "Drive ID", "13%", (d) => {
+  driveColumn("port", "Port", "4%", (d) => d.port ?? "—"),
+  driveColumn("device", "Device", "6%", (d) => d.device || "—"),
+  driveColumn("id", "Drive ID", "18%", (d) => {
     const id = (d.path || d.name).replace(/^.*\//, "").replace(/-part\d+$/, "");
     return <span title={id}>{id.split("_").at(-1) || id}</span>;
   }),
-  driveColumn("replacement", "↻", "4%", (d) =>
+  driveColumn("replacement", "↻", "3%", (d) =>
     d.replacing && !d.missing ? (
       <span aria-label="Replacement drive" title="Replacement drive" className="replacement">
         ↻
       </span>
     ) : null,
   ),
-  driveColumn("state", "State", "10%", (d) => (
+  driveColumn("state", "State", "9%", (d) => (
     <span className={`state-tag ${d.state === "ONLINE" ? "good" : "bad"}`}>
       {d.state === "CANT_OPEN" ? "MISSING" : d.state}
     </span>
   )),
-  driveColumn("size", "Size", "9%", (d) => bytes(d.size)),
+  driveColumn("size", "Size", "8%", (d) => bytes(d.size)),
   driveColumn("temperature", "°C", "5%", (d) => (
     <span
       className={
@@ -99,7 +99,7 @@ const driveColumns = [
     <span className="write-rate">{bytes(d.write)}</span>
   )),
   driveColumn("iops", "IOPS", "7%", (d) => fmt(d.iops)),
-  driveColumn("busy", "Busy", "7%", (d) =>
+  driveColumn("busy", "Busy", "8%", (d) =>
     finite(d.busy) ? (
       <span
         className={`busy-cell ${d.busy >= 80 ? "warn" : ""}`}
@@ -188,9 +188,8 @@ export function ZfsPanel({ zfs: z, now }: { zfs?: Zfs; now: number }) {
       <h3 className="section-heading">Datasets</h3>
       <DataTable label="ZFS datasets" columns={datasetColumns} data={z.datasets || []} />
       <p className="note">
-        Port = SATA port. ID = drive serial (full ID on hover). R/W/CRC = errors. ↻ replacement.
-        Temperatures: green &lt;45°C, amber ≥45°C, red ≥55°C. ¹ Dataset capacity includes shared
-        free space; raw capacity includes parity.
+        Port = SATA. ↻ replacement. R/W/CRC = errors. ¹ Dataset totals share free space; raw
+        includes parity.
       </p>
     </div>
   );
