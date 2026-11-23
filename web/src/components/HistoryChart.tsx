@@ -1,7 +1,13 @@
 import type { HistoryPoint, Network } from "../types";
 type Series = "cpu" | "gpu" | "rx" | "tx";
 import { finite, fmt, colors, bytes } from "../format";
-export function chartPath(history: HistoryPoint[], key: Series, max: number) {
+export function chartPath(
+  history: HistoryPoint[],
+  key: Series,
+  max: number,
+  maxGap = 10,
+  now?: number,
+) {
   const last = history.at(-1);
   if (!last) return "";
   let path = "",
@@ -12,9 +18,10 @@ export function chartPath(history: HistoryPoint[], key: Series, max: number) {
       previous = null;
       continue;
     }
-    const x = 600 - (last.t - point.t) * 5;
+    const x = 600 - ((now ?? last.t) - point.t) * 5;
+    if (x < 0 || x > 600) continue;
     const y = 98 - Math.max(0, Math.min(1, value / max)) * 96;
-    path += `${previous !== null && point.t - previous < 10 ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)} `;
+    path += `${previous !== null && point.t - previous < maxGap ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)} `;
     previous = point.t;
   }
   return path;
@@ -24,11 +31,15 @@ export function HistoryChart({
   history = [],
   unavailable,
   network = {},
+  maxGap = 10,
+  now,
 }: {
   kind: "cpu" | "gpu" | "network";
   history?: HistoryPoint[];
   unavailable?: string | null;
   network?: Network;
+  maxGap?: number;
+  now?: number;
 }) {
   const isNetwork = kind === "network";
   const max = isNetwork
@@ -78,7 +89,12 @@ export function HistoryChart({
             <path key={y} className="gridline" d={`M0 ${y}H600`} />
           ))}
           {lines.map(([key, color]) => (
-            <path key={key} className="line" stroke={color} d={chartPath(history, key, max)} />
+            <path
+              key={key}
+              className="line"
+              stroke={color}
+              d={chartPath(history, key, max, maxGap, now)}
+            />
           ))}
         </svg>
         <div className="y-axis">

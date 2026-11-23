@@ -1,3 +1,4 @@
+import { scanEstimate } from "../scan";
 import type { ReactNode, CSSProperties } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Drive, Dataset, Zfs } from "../types";
@@ -164,9 +165,16 @@ export function ZfsPanel({ zfs: z, now }: { zfs?: Zfs; now: number }) {
         %
       </StatRow>
       <StatRow label={scan.state === "SCANNING" ? "Rebuild / scrub" : "Last scan"}>
-        {scan.state === "SCANNING"
-          ? `${fmt(z.scan_percent, 2)}% · ${scan.function || ""}`
-          : scan.state || "No scan"}
+        {scan.state === "SCANNING" ? (
+          <span className="scan-reading">
+            <span>
+              {fmt(z.scan_percent, 2)}% · {scan.function || ""}
+            </span>
+            <span className="scan-extra">{scanEstimate(z)}</span>
+          </span>
+        ) : (
+          scan.state || "No scan"
+        )}
       </StatRow>
       {scan.state === "SCANNING" && finite(z.scan_percent) && (
         <Meter

@@ -59,12 +59,32 @@ export interface Zfs {
   read_errors?: Reading;
   write_errors?: Reading;
   checksum_errors?: Reading;
-  scan?: { state?: string; function?: string };
+  scan?: {
+    state?: string;
+    function?: string;
+    to_examine?: Reading;
+    issued?: Reading;
+    skipped?: Reading;
+    processed?: Reading;
+    issued_bytes_per_scan?: Reading;
+    pass_start?: Reading;
+    scrub_pause?: Reading;
+    scrub_spent_paused?: Reading;
+  };
   scan_percent?: Reading;
   drives?: Drive[];
   datasets?: Dataset[];
 }
 export interface Metrics {
+  hardware_model?: string;
+  llm?: {
+    available: boolean;
+    timestamp: number;
+    model: string;
+    active: Reading;
+    queued: Reading;
+    tokensPerSecond: Reading;
+  } | null;
   timestamp: number;
   cpu_name: string;
   uptime: number;
@@ -91,6 +111,7 @@ export interface Host {
 }
 export type Fleet = Record<string, Host>;
 export interface FleetConfig {
+  alertHosts?: string[];
   hideOfflineFooter?: boolean;
   networkEnabled?: boolean;
   title?: string;
@@ -107,6 +128,7 @@ export interface HistoryPoint {
 }
 export type Histories = Record<string, HistoryPoint[]>;
 export interface UnifiPort {
+  powerWatts?: Reading;
   idx: number;
   state: string;
   connector: string;
@@ -120,6 +142,10 @@ export interface UnifiRadio {
   txRetriesPct: number | null;
 }
 export interface UnifiDevice {
+  powerWatts?: Reading;
+  powerBudgetWatts?: Reading;
+  extraTimestamp?: number;
+  wan?: { up: boolean; "rx_bytes-r": Reading; "tx_bytes-r": Reading }[] | null;
   id: string;
   name: string;
   kind: "gateway" | "switch" | "ap";

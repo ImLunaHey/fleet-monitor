@@ -244,6 +244,7 @@ func rate(current, previous uint64, elapsed float64) float64 {
 }
 func sample() {
 	name := localName()
+	machineModel := hardwareModel()
 	iface := env("METRICS_INTERFACE", defaultInterface())
 	device := diskDevice()
 	info, _ := cpu.Info()
@@ -337,6 +338,8 @@ func sample() {
 		}
 		data := M{"battery": battery(), "timestamp": float64(time.Now().UnixMilli()) / 1000, "host": name, "os": runtime.GOOS, "cpu_name": model, "physical_cores": physical, "interface": iface, "sensors": sensorLines(), "uptime": up, "cpu": M{"usage": total / float64(len(cores)), "cores": cores, "temperature": cpuTemp, "frequency": clock, "load": loads}, "gpu": gpuData, "memory": M{"used": memory.Total - memory.Available, "total": memory.Total, "available": memory.Available, "percent": 100 * float64(memory.Total-memory.Available) / float64(memory.Total), "cached": memory.Cached, "buffers": memory.Buffers, "swap_used": swapUsed, "swap_total": swapTotal}, "disk": M{"used": usage.Used, "total": usage.Total, "free": usage.Free, "percent": usage.UsedPercent, "device": device, "read": read, "write": write, "iops": iops}, "network": M{"download": rate(currentNet.BytesRecv, prevNet.BytesRecv, elapsed), "upload": rate(currentNet.BytesSent, prevNet.BytesSent, elapsed), "received": currentNet.BytesRecv, "sent": currentNet.BytesSent, "address": address, "speed": speed, "connected": address != "Unavailable"}, "services": services}
 		mu.Lock()
+		data["hardware_model"] = machineModel
+		data["llm"] = llmSnapshot
 		data["zfs"] = zfsSnapshot
 		snapshot = data
 		mu.Unlock()
@@ -431,6 +434,9 @@ func main() {
 	}
 	_ = json.Unmarshal([]byte(env("DASHBOARD_PEERS", "{}")), &peerURLs)
 	go sample()
+	if base := os.Getenv("LLAMA_URL"); base != "" {
+		go llmLoop(base)
+	}
 	if os.Getenv("METRICS_ZFS_POOL") != "" {
 		go zfsLoop()
 	}

@@ -1,3 +1,4 @@
+import { HeaderAlerts, collectAlerts } from "./components/HeaderAlerts";
 import { NetworkStrip } from "./components/NetworkStrip";
 import type { Fleet, FleetConfig, Histories, UnifiSnapshot } from "./types";
 import { useEffect, useState } from "react";
@@ -12,6 +13,7 @@ export function Dashboard({
   now,
   network,
   networkError = false,
+  networkHistories = {},
 }: {
   fleet: Fleet;
   config?: FleetConfig;
@@ -20,6 +22,7 @@ export function Dashboard({
   now: number;
   network?: UnifiSnapshot;
   networkError?: boolean;
+  networkHistories?: Histories;
 }) {
   const order = [...new Set([...(config.order || []), ...Object.keys(fleet)])].filter(
     (name) => fleet[name],
@@ -36,12 +39,15 @@ export function Dashboard({
           <div className="eyebrow">{config.title || "Fleet Monitor"} / live system overview</div>
           {!config.networkEnabled && <h1>Machines</h1>}
         </div>
-        <div className="clock">
-          {error && <span className="warn">Telemetry connection lost · </span>}
-          {new Date(now * 1000).toLocaleString("en-GB")}
-        </div>
+        <HeaderAlerts
+          alerts={collectAlerts(fleet, config, now, network, error, networkError)}
+          now={now}
+        />
+        <div className="clock">{new Date(now * 1000).toLocaleString("en-GB")}</div>
       </header>
-      {config.networkEnabled && <NetworkStrip data={network} now={now} error={networkError} />}
+      {config.networkEnabled && (
+        <NetworkStrip data={network} now={now} error={networkError} histories={networkHistories} />
+      )}
       <div className="wall" style={!featured ? { gridTemplateColumns: "1fr" } : undefined}>
         <section className="machines" aria-label="Machines">
           {regular.map((name) => {

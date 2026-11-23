@@ -12,15 +12,18 @@ let inherit (lib) mkEnableOption mkOption types; in {
     allowedClients = mkOption { type = types.listOf types.str; default = [ "127.0.0.1" "::1" ]; description = "Exact source IP addresses permitted to read metrics; no CIDR ranges."; };
     peers = mkOption { type = types.attrsOf types.str; default = { }; description = "Fixed peer names mapped to their /api/metrics URLs."; };
     healthChecks = mkOption { type = types.attrsOf types.str; default = { }; description = "Named HTTP health URLs; HTTP 200 is healthy."; };
+    llamaUrl = mkOption { type = types.nullOr types.str; default = null; description = "Optional llama.cpp server base URL. Enable --metrics on the server; only model identity and aggregate activity are collected."; };
     title = mkOption { type = types.str; default = "Fleet Monitor"; description = "Heading above the host cards."; };
     featuredHost = mkOption { type = types.nullOr types.str; default = null; description = "Host shown in the full-height right column (usually the ZFS host)."; };
     hostOrder = mkOption { type = types.listOf types.str; default = [ ]; description = "Preferred host order; other configured hosts follow."; };
     compactHosts = mkOption { type = types.listOf types.str; default = [ ]; description = "Hosts shown in a compact footer instead of a card."; };
+    alertHosts = mkOption { type = types.listOf types.str; default = [ ]; description = "Hosts expected to stay online; alert when their telemetry disappears. Live machines also report hardware and service alerts."; };
     hideOfflineFooter = mkOption { type = types.bool; default = false; description = "Hide the footer and offline host list to reserve space for network telemetry."; };
     unifi = {
       enable = mkEnableOption "read-only UniFi Network telemetry";
       url = mkOption { type = types.str; default = ""; description = "HTTPS Integration API base URL, including /proxy/network/integration/v1 on UniFi OS."; };
       siteId = mkOption { type = types.str; default = ""; description = "UniFi site UUID."; };
+      legacySite = mkOption { type = types.str; default = ""; description = "Optional local UniFi OS site name (usually default) for read-only WAN byte rates and PoE watts through /proxy/network/api/s/<site>/stat/device. Empty disables this compatibility endpoint."; };
       apiKeyFile = mkOption { type = types.str; default = ""; description = "Runtime path to the API key; never put its contents in the Nix store. NixOS loads it as a systemd credential."; };
       certificateSha256 = mkOption { type = types.str; default = ""; description = "Optional SHA256 certificate pin for a local self-signed controller. Empty uses normal TLS verification."; };
     };

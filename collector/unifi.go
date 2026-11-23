@@ -17,10 +17,11 @@ import (
 )
 
 type unifiPort struct {
-	Index     int    `json:"idx"`
-	State     string `json:"state"`
-	Connector string `json:"connector"`
-	Speed     *int   `json:"speedMbps"`
+	Power     *float64 `json:"powerWatts"`
+	Index     int      `json:"idx"`
+	State     string   `json:"state"`
+	Connector string   `json:"connector"`
+	Speed     *int     `json:"speedMbps"`
 	PoE       *struct {
 		State string `json:"state"`
 	} `json:"poe,omitempty"`
@@ -32,17 +33,21 @@ type unifiRadio struct {
 	Retries   *float64 `json:"txRetriesPct"`
 }
 type unifiDevice struct {
-	ID        string       `json:"id"`
-	Name      string       `json:"name"`
-	State     string       `json:"state"`
-	Kind      string       `json:"kind"`
-	CPU       *float64     `json:"cpu"`
-	Memory    *float64     `json:"memory"`
-	Uptime    *float64     `json:"uptime"`
-	Timestamp int64        `json:"timestamp"`
-	Ports     []unifiPort  `json:"ports"`
-	Radios    []unifiRadio `json:"radios"`
-	Clients   int          `json:"clients"`
+	Power          *float64     `json:"powerWatts"`
+	PowerBudget    *float64     `json:"powerBudgetWatts"`
+	ExtraTimestamp *int64       `json:"extraTimestamp,omitempty"`
+	WAN            []unifiWAN   `json:"wan"`
+	ID             string       `json:"id"`
+	Name           string       `json:"name"`
+	State          string       `json:"state"`
+	Kind           string       `json:"kind"`
+	CPU            *float64     `json:"cpu"`
+	Memory         *float64     `json:"memory"`
+	Uptime         *float64     `json:"uptime"`
+	Timestamp      int64        `json:"timestamp"`
+	Ports          []unifiPort  `json:"ports"`
+	Radios         []unifiRadio `json:"radios"`
+	Clients        int          `json:"clients"`
 }
 type networkSnapshot struct {
 	Available bool          `json:"available"`
@@ -56,6 +61,7 @@ type networkSnapshot struct {
 var networkData = networkSnapshot{}
 
 type unifiClient struct {
+	legacySite      string
 	base, key, site string
 	http            *http.Client
 }
@@ -141,6 +147,10 @@ func (c *unifiClient) poll(ctx context.Context) (networkSnapshot, error) {
 	}
 	out := networkSnapshot{Timestamp: time.Now().Unix(), Devices: []unifiDevice{}, Clients: len(clients)}
 	counts := map[string]int{}
+	// Supplementary telemetry is optional: failure must not hide base metrics.
+	extraContext, cancelExtra := context.WithTimeout(ctx, 2*time.Second)
+	extras := c.extras(extraContext, c.legacySite)
+	cancelExtra()
 	for _, cl := range clients {
 		if cl.Type == "WIRED" {
 			out.Wired++
@@ -152,6 +162,7 @@ func (c *unifiClient) poll(ctx context.Context) (networkSnapshot, error) {
 	}
 	for _, entry := range devices {
 		var d struct {
+			MAC    string `json:"macAddress"`
 			ID     string `json:"id"`
 			Name   string `json:"name"`
 			State  string `json:"state"`
@@ -169,12 +180,18 @@ func (c *unifiClient) poll(ctx context.Context) (networkSnapshot, error) {
 			return networkSnapshot{}, e
 		}
 		device := unifiDevice{ID: d.ID, Name: d.Name, State: d.State, Kind: "switch", Ports: d.Interfaces.Ports, Radios: d.Interfaces.Radios, Clients: counts[d.ID]}
+		if c.legacySite != "" {
+			device.ExtraTimestamp = new(int64)
+		}
 		if _, ok := d.Features["accessPoint"]; ok {
 			device.Kind = "ap"
 		} else if d.Uplink == nil {
 			device.Kind = "gateway"
 		}
 		if d.State == "ONLINE" {
+			if extra, ok := extras[d.MAC]; ok {
+				applyUnifiExtra(&device, extra)
+			}
 			var stats struct {
 				CPU        *float64  `json:"cpuUtilizationPct"`
 				Memory     *float64  `json:"memoryUtilizationPct"`
@@ -211,6 +228,7 @@ func unifiLoop() {
 		if e == nil {
 			c, err := newUnifiClient(os.Getenv("UNIFI_URL"), string(key), os.Getenv("UNIFI_SITE_ID"), os.Getenv("UNIFI_CERTIFICATE_SHA256"))
 			if err == nil {
+				c.legacySite = os.Getenv("UNIFI_LEGACY_SITE")
 				ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 				data, e = c.poll(ctx)
 				cancel()

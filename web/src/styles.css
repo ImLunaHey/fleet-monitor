@@ -739,3 +739,175 @@ main.network-layout {
 .poe-mark {
   color: var(--orange);
 }
+
+header {
+  gap: 32px;
+}
+.clock {
+  flex-shrink: 0;
+}
+.header-alerts {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-right: 32px;
+  min-width: 0;
+  font-size: 15px;
+}
+.alert-label,
+.alert-page {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.alert-chip {
+  padding: 5px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.critical {
+  color: #ff968b;
+  background: #ff968b0d;
+}
+.warning {
+  color: #e7b57a;
+  background: #e7b57a0d;
+}
+.gateway-expanded {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 60px;
+  min-height: 0;
+}
+.gateway-clients {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 148px;
+}
+.gateway-clients > b {
+  line-height: 25px;
+}
+.gateway-clients > span {
+  font-size: 14px;
+  line-height: 17px;
+  color: var(--muted);
+}
+.gateway-clients > small {
+  font-size: 12px;
+  line-height: 15px;
+  color: var(--muted);
+}
+.wan-readings {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 165px;
+  font-size: 18px;
+}
+.download {
+  color: var(--blue);
+}
+.upload {
+  color: var(--orange);
+}
+.wan-chart {
+  flex: 1;
+  height: 60px;
+  min-width: 0;
+}
+.wan-chart .chart-box {
+  height: 60px;
+  background: transparent;
+  padding: 0;
+  display: block;
+}
+.wan-chart .legend,
+.wan-chart .row {
+  display: none;
+}
+.wan-chart .plot {
+  height: 60px;
+}
+.wan-chart .plot svg {
+  height: 40px;
+}
+.wan-chart .y-axis {
+  bottom: 19px;
+}
+.wan-chart .y-axis > span:nth-child(2) {
+  visibility: hidden;
+}
+.wan-chart .x-axis {
+  font-size: 12px;
+  line-height: 15px;
+}
+.port-cell .port-watts {
+  font-size: 12px;
+  line-height: 16px;
+  min-height: 16px;
+  color: #ccc;
+}
+.network-foot > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.network-foot strong {
+  font-weight: 500;
+  color: var(--text);
+}
+.poe-budget {
+  display: inline-block;
+  width: 80px;
+  height: 4px;
+  background: #ffffff12;
+  border-radius: 2px;
+  margin-left: 6px;
+}
+.poe-budget i {
+  display: block;
+  height: 4px;
+  background: var(--purple);
+  border-radius: 2px;
+}
+.llm-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  white-space: nowrap;
+  min-width: 0;
+}
+.llm-name {
+  color: #ddd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+.llm-state {
+  color: var(--purple);
+}
+.llm-line small {
+  font-size: 14px;
+  color: var(--muted);
+}
+.llm-service {
+  margin-left: auto;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scan-reading {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.scan-extra {
+  color: var(--muted);
+  font-size: 15px;
+}

@@ -4,6 +4,7 @@ import { HistoryChart } from "./HistoryChart";
 import { GpuPanel } from "./GpuPanel";
 import { BatteryStatus } from "./BatteryStatus";
 import { MetricTile, Meter, StatRow } from "./Primitives";
+import { LlmStatus } from "./LlmStatus";
 import { ZfsPanel } from "./ZfsPanel";
 export function MachineCard({
   name,
@@ -33,7 +34,10 @@ export function MachineCard({
       <div className="head">
         <div>
           <h2>{name}</h2>
-          <div className="subtitle">{d.cpu_name}</div>
+          <div className="subtitle">
+            {d.hardware_model ? `${d.hardware_model} · ` : ""}
+            {d.cpu_name}
+          </div>
         </div>
         <span className="pill online">● Online</span>
       </div>
@@ -56,9 +60,9 @@ export function MachineCard({
         />
       </div>
       <div className="graphs">
-        <HistoryChart kind="cpu" history={history} />
-        <HistoryChart kind="gpu" history={history} unavailable={gpuUnavailable} />
-        <HistoryChart kind="network" history={history} network={d.network} />
+        <HistoryChart now={now} kind="cpu" history={history} />
+        <HistoryChart now={now} kind="gpu" history={history} unavailable={gpuUnavailable} />
+        <HistoryChart now={now} kind="network" history={history} network={d.network} />
       </div>
       <GpuPanel gpu={d.gpu} />
       {featured && d.zfs ? (
@@ -86,7 +90,9 @@ export function MachineCard({
         </div>
       )}
       <div className="health-line" data-id="services">
-        {d.battery ? (
+        {d.llm ? (
+          <LlmStatus llm={d.llm} now={now} services={services} />
+        ) : d.battery ? (
           <BatteryStatus battery={d.battery} />
         ) : featured ? (
           ""

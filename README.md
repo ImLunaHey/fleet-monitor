@@ -137,9 +137,7 @@ Endpoints: `/api/metrics` on every agent; `/` and `/api/fleet` on dashboard
 instances; `/api/config` supplies layout settings. `/api/peers/NAME` can relay
 only configured peers. Reads use GET; other methods are rejected.
 
-## Development
-
-### UniFi Network
+## UniFi Network
 
 The dashboard can show a shallow gateway, switch-port, and access-point strip
 above the existing host cards. Enable it on the dashboard host:
@@ -152,6 +150,7 @@ services.fleet-monitor = {
     enable = true;
     url = "https://controller.example/proxy/network/integration/v1";
     siteId = "your-site-uuid";
+    legacySite = "default"; # Optional WAN/PoE supplement on local UniFi OS
     apiKeyFile = "/var/lib/fleet-monitor-secrets/unifi-api-key";
     # Optional SHA256 leaf-certificate pin for a self-signed controller:
     # certificateSha256 = "64 hexadecimal characters";
@@ -171,12 +170,72 @@ seconds, with bounded timeouts and paginated inventory reads. `/api/network`
 exposes normalized readings, not the controller key, client identities, MACs,
 or IP addresses. Only device names/IDs and aggregate client counts are retained.
 The strip shows device status, CPU/RAM, uptime, negotiated port speeds, active
-PoE state, and radio channels/widths/retries. It does not infer WAN throughput,
-PoE wattage, or RF signal strength. Controller failures and stale device
-heartbeats suppress healthy indicators and current readings.
+PoE state, and radio channels/widths/retries. When `legacySite` is set, a
+read-only request to the same controller’s `/proxy/network/api/s/<site>/stat/device`
+compatibility endpoint adds explicit WAN receive/transmit byte rates, per-port
+PoE watts, and the effective PoE budget. This endpoint is version-dependent;
+missing or stale supplementary readings stay unknown without hiding the base
+Integration API data. No WAN speed is inferred from generic uplink counters.
+Controller failures and stale device heartbeats suppress healthy indicators.
 
 The compact layout targets an ultrawide monitor with a small device inventory
 (the gateway, switch and AP arrangement); large sites need a tailored layout.
+
+## History, alerts and inference
+
+The browser saves a bounded two-minute window of numeric CPU/GPU/network/WAN
+history locally. It survives page/kiosk restarts; it is not a long-term database.
+Expired samples are dropped and gaps are not joined. Storage failure leaves
+live polling operational. Saved samples never restore host health or status.
+
+Alerts share the title/clock row and clear when current readings recover.
+They cover disk usage at 95%, CPU at 90°C, GPU at 85°C, failed services,
+stale telemetry, degraded ZFS, data errors and HDD temperatures at 45°C
+(critical at 55°C). When more than three alerts exist, groups rotate every
+eight seconds. Set `alertHosts = [ "desktop" "nas" ];` for hosts expected to
+remain online; intentionally offline hosts need not be included.
+
+Set `llamaUrl = "http://127.0.0.1:8080";` and start llama.cpp with `--metrics`
+to show the loaded model, active/queued requests and generation throughput.
+The collector reads only aggregate metrics and model identity, never prompts
+or outputs. “Active” includes prompt processing; idle throughput is labelled
+as the last reported value. macOS agents automatically report the Mac model
+name alongside the chip. ZFS estimates follow OpenZFS's current-pass issued
+byte rate, excluding skipped bytes and paused time; unavailable estimates
+are explicit.
+
+## Releases and Nix packages
+
+The default Nix packages download the single compiled HTML file and the
+matching collector executable from a versioned GitHub release. Each asset is
+pinned by SHA-256 in `nix/release.json`; Nix only installs the fetched files,
+with no Go, Node or npm compilation. Linux and macOS support x86_64 and aarch64.
+Existing service and kiosk runtime dependencies remain managed by Nix.
+
+Source builds remain available as `collector-source` and `dashboard-source`.
+Flake checks use those source builds. To test a local code change through a
+module, override `package` and `dashboardPackage` with those packages; default
+packages intentionally use the pinned released version.
+
+To prepare a release, use Go 1.25.5 and Node 22.21.1, then:
+
+```sh
+(cd web && npm ci)
+scripts/build-release.sh v0.2.0
+cp dist-release/release.json nix/release.json
+# Commit source + manifest using Conventional Commits, then tag and push.
+git tag v0.2.0
+git push origin main v0.2.0
+```
+
+For subsequent releases, increment the version. The tag workflow runs Go tests
+on Linux/macOS, frontend quality/coverage checks, and builds all four binaries
+with CGO disabled. It verifies every artifact against the committed manifest
+before publishing the HTML, executables, manifest and SHA256SUMS. Release assets
+are never overwritten. Update the manifest and release together when source
+changes; consumers update their flake lock to adopt the release.
+
+## Development
 
 ### Checks
 
@@ -184,7 +243,7 @@ The compact layout targets an ultrawide monitor with a small device inventory
 nix develop
 (cd collector && go test ./... && go vet ./...)
 (cd web && npm ci && npm run check)
-nix build .#collector .#dashboard
+nix build .#collector-source .#dashboard-source
 ```
 
 The strict TypeScript/TSX React components are in `web/src/components`.
@@ -194,11 +253,11 @@ Tests cover missing/stale
 hosts, replacement drives, axes/history gaps, GPU memory, battery states and
 capacity display. Collector tests cover ZFS parsing, counter resets, APFS
 mapping, sensor validation, battery parsing, and Intel memory accounting.
-Nix dashboard builds also run the type, lint, formatting, and coverage checks.
+Nix dashboard source builds also run the type, lint, formatting, and coverage checks.
 Coverage gates apply per source file (90% lines/statements/functions, 85%
 branches); only bootstrap, types, fixtures, and test setup are excluded.
 Package and npm dependencies are locked; after dependency
-changes update `npmDepsHash` in `nix/dashboard.nix` using Nix's reported hash.
+changes update `npmDepsHash` in `nix/dashboard-source.nix` using Nix's reported hash.
 
 For a non-Nix build, build the Go executable in `collector`, run `npm run build`
 in `web`, and set `DASHBOARD_HTML` to `web/dist/index.html`. Module environment

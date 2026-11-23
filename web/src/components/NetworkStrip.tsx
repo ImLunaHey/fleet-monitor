@@ -1,4 +1,5 @@
-import type { UnifiDevice, UnifiPort, UnifiSnapshot } from "../types";
+import { WanPanel } from "./WanPanel";
+import type { Histories, HistoryPoint, UnifiDevice, UnifiPort, UnifiSnapshot } from "../types";
 import { finite, fmt, fresh } from "../format";
 const deviceOrder = { gateway: 0, switch: 1, ap: 2 };
 export function uptime(seconds: unknown) {
@@ -11,7 +12,19 @@ function speed(port: UnifiPort) {
     ? `${fmt(port.speedMbps / 1000, port.speedMbps % 1000 ? 1 : 0)}G`
     : `${port.speedMbps}M`;
 }
-function GatewayMetrics({ device, data }: { device: UnifiDevice; data: UnifiSnapshot }) {
+function GatewayMetrics({
+  device,
+  data,
+  history,
+  now,
+}: {
+  device: UnifiDevice;
+  data: UnifiSnapshot;
+  history?: HistoryPoint[];
+  now: number;
+}) {
+  if (device.extraTimestamp !== undefined)
+    return <WanPanel device={device} data={data} history={history} now={now} />;
   return (
     <>
       <div className="gateway-metrics">
@@ -44,7 +57,8 @@ function GatewayMetrics({ device, data }: { device: UnifiDevice; data: UnifiSnap
     </>
   );
 }
-function SwitchMetrics({ device }: { device: UnifiDevice }) {
+function SwitchMetrics({ device, now }: { device: UnifiDevice; now: number }) {
+  const extra = fresh(device.extraTimestamp, now, 90);
   const ports = device.ports ?? [];
   return (
     <>
@@ -77,13 +91,43 @@ function SwitchMetrics({ device }: { device: UnifiDevice }) {
                 )}
               </span>
               <b>{speed(p)}</b>
+              {device.extraTimestamp !== undefined && (
+                <small className="port-watts">
+                  {p.poe ? `${fmt(extra ? p.powerWatts : null, 1)} W` : ""}
+                </small>
+              )}
             </div>
           ))}
         </div>
       </div>
       <div className="network-foot">
-        CPU {fmt(device.cpu, 1)}% · RAM {fmt(device.memory, 1)}%
-        <span>G = Gbps · M = Mbps · {uptime(device.uptime)} uptime</span>
+        {device.extraTimestamp !== undefined ? (
+          <span>
+            PoE{" "}
+            <strong>
+              {fmt(extra ? device.powerWatts : null, 1)} /{" "}
+              {fmt(extra ? device.powerBudgetWatts : null)} W
+            </strong>
+            <i className="poe-budget">
+              <i
+                style={{
+                  width:
+                    extra &&
+                    finite(device.powerWatts) &&
+                    finite(device.powerBudgetWatts) &&
+                    device.powerBudgetWatts > 0
+                      ? `${Math.min(100, (100 * device.powerWatts) / device.powerBudgetWatts)}%`
+                      : "0%",
+                }}
+              />
+            </i>
+          </span>
+        ) : (
+          <span>G = Gbps · M = Mbps</span>
+        )}
+        <span>
+          CPU {fmt(device.cpu, 1)}% · RAM {fmt(device.memory, 1)}% · {uptime(device.uptime)} uptime
+        </span>
       </div>
     </>
   );
@@ -122,10 +166,12 @@ export function NetworkStrip({
   data,
   now,
   error = false,
+  histories = {},
 }: {
   data?: UnifiSnapshot;
   now: number;
   error?: boolean;
+  histories?: Histories;
 }) {
   const current = !error && data?.available && fresh(data.timestamp, now, 35);
   if (!current)
@@ -162,11 +208,16 @@ export function NetworkStrip({
               </div>
               {healthy ? (
                 device.kind === "gateway" ? (
-                  <GatewayMetrics device={device} data={data} />
+                  <GatewayMetrics
+                    device={device}
+                    data={data}
+                    history={histories["wan:" + device.id]}
+                    now={now}
+                  />
                 ) : device.kind === "ap" ? (
                   <RadioMetrics device={device} />
                 ) : (
-                  <SwitchMetrics device={device} />
+                  <SwitchMetrics device={device} now={now} />
                 )
               ) : (
                 <span className="network-foot">Current readings unavailable</span>

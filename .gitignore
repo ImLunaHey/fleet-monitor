@@ -6,3 +6,5 @@ result
 result-*
 .env
 .env.*
+
+/dist-release/
