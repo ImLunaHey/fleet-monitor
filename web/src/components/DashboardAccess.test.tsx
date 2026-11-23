@@ -23,6 +23,6 @@ describe("DashboardAccess", () => {
       "href",
       "http://192.0.2.10:8099/",
     );
-    expect(screen.getByText("Connect to the same network")).toBeInTheDocument();
+    expect(screen.getByTitle("Connect to the same network")).toBeInTheDocument();
   });
 });

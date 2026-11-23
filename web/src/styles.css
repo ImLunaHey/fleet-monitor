@@ -997,7 +997,7 @@ header {
 /* The QR code is generated locally; telemetry and addresses never go to a QR service. */
 header:has(.dashboard-access) {
   height: auto;
-  min-height: 104px;
+  min-height: 64px;
   flex-shrink: 0;
 }
 .dashboard-access {
@@ -1037,7 +1037,7 @@ header:has(.dashboard-access) {
 }
 
 /* Touch layouts scroll naturally; the wall display keeps its existing grid. */
-@media (max-width: 1400px), (pointer: coarse), (max-height: 800px) {
+@media (max-width: 2400px), (pointer: coarse), (max-height: 800px) {
   body {
     overflow: auto;
   }
@@ -1345,5 +1345,53 @@ header:has(.dashboard-access) {
   }
   .x-axis {
     white-space: nowrap;
+  }
+}
+
+/* Keep storage content within its grid row, even with more datasets/drives. */
+.compact-zfs {
+  overflow: auto;
+}
+.compact-zfs > * {
+  flex-shrink: 0;
+}
+.network-layout .compact-zfs {
+  padding: 14px;
+  gap: 6px;
+}
+.dashboard-access {
+  gap: 8px;
+}
+.dashboard-access svg {
+  border-radius: 4px;
+}
+@media (max-width: 2400px), (pointer: coarse), (max-height: 800px) {
+  .compact-zfs {
+    overflow: visible;
+  }
+  .network-layout .compact-zfs {
+    padding: 12px;
+    gap: 12px;
+  }
+  .value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    white-space: normal;
+  }
+  .value small {
+    margin-left: 0;
+  }
+}
+@media (min-width: 2401px) and (min-height: 801px) and (pointer: fine) {
+  .compact-zfs .zfs-table td {
+    padding: 4px;
+  }
+  .compact-zfs .zfs-table th {
+    padding: 6px 4px;
+  }
+  .compact-zfs .section-heading {
+    margin-top: 6px;
+    padding-top: 6px;
   }
 }

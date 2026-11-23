@@ -11,21 +11,23 @@ export function DashboardAccess({ url }: { url?: string | null }) {
   if (!["http:", "https:"].includes(target.protocol) || target.username || target.password)
     return null;
   return (
-    <aside className="dashboard-access" aria-label="Open dashboard on another device">
+    <aside
+      className="dashboard-access"
+      aria-label="Open dashboard on another device"
+      title="Connect to the same network"
+    >
       <a href={target.href} aria-label="Open this dashboard on your phone or tablet">
         <QRCodeSVG
           value={target.href}
-          size={104}
+          size={64}
           marginSize={4}
           level="M"
           title="Scan to open this dashboard"
         />
       </a>
       <div>
-        <strong>Take it with you</strong>
-        <span>Scan on your phone or tablet</span>
+        <strong>Scan to open</strong>
         <a href={target.href}>{target.host}</a>
-        <span className="hint">Connect to the same network</span>
       </div>
     </aside>
   );
