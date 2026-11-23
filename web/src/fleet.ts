@@ -30,6 +30,18 @@ export function appendHistory(histories: Histories, fleet: Fleet) {
   }
   return next;
 }
+export function retainMetrics(previous: Fleet, incoming: Fleet): Fleet {
+  return Object.fromEntries(
+    Object.entries(incoming).map(([name, host]) => [
+      name,
+      {
+        ...host,
+        online: host.online && !!host.metrics,
+        metrics: host.metrics ?? previous[name]?.metrics,
+      },
+    ]),
+  );
+}
 export function useFleet() {
   const client = useQueryClient();
   const fleet = useQuery({
@@ -39,7 +51,7 @@ export function useFleet() {
       const previous = client.getQueryData<{ hosts: Fleet; histories: Histories }>(["fleet"]);
       const histories = appendHistory(previous?.histories ?? loadHistories(), hosts);
       saveHistories({ ...loadHistories(), ...histories });
-      return { hosts, histories };
+      return { hosts: retainMetrics(previous?.hosts ?? {}, hosts), histories };
     },
     refetchInterval: 2000,
     refetchIntervalInBackground: true,

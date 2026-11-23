@@ -271,7 +271,7 @@ MIT licensed.
 ### Physical drive slots
 
 Configure the enclosure wiring on the dashboard host, independently for each peer.
-Keys are ATA controller port numbers (the values in the ATA column), and values
+Keys are ATA controller port numbers reported by the collector, and values
 specify the corresponding physical slot. For example, ATA 6 connects to slot 2:
 
 ```nix
@@ -282,9 +282,25 @@ services.fleet-monitor.driveSlots.nas = {
 ```
 
 This mapping survives drive replacements and changes to serials or /dev/sdX names.
-The table sorts by physical slot, keeps a separate ATA column, and marks missing
-or unmapped ports `—`. Without a mapping,
-only ATA ports are shown. Old and replacement drives on the same ATA port display
+The table sorts by physical slot and marks missing or unmapped ports `—`.
+ATA ports are used for mapping but not displayed. Without a mapping, the table
+shows device names and drive IDs without a slot column. Old and replacement drives on the same ATA port display
 the same physical slot automatically. Update the mapping if the enclosure wiring
 changes. Hosts without Nix can set the same `driveSlots` object in
 `DASHBOARD_CONFIG` JSON. Slot metadata is display-only and never changes ZFS.
+
+### Offline machines
+
+A previously seen machine keeps its place when telemetry stops, with an Offline
+badge, last-seen time, hardware identity, and frozen graphs labeled with absolute
+times. Cached readings are never shown as live health or current usage. The card
+returns to live telemetry automatically on recovery, including after a dashboard
+API outage. The featured host keeps its column too.
+
+Hosts in `alertHosts` also get a placeholder before their first successful sample,
+so expected machines retain their positions across a dashboard restart. Other
+never-seen offline hosts remain in the existing optional footer; compact hosts
+remain compact. Last-known hardware details and frozen charts are retained in
+memory for the current dashboard session. Browser-persisted graph history remains
+limited to two minutes; an offline host after a reload may have no recorded
+identity or history yet, which is shown explicitly rather than invented.

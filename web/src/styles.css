@@ -911,3 +911,85 @@ header {
   color: var(--muted);
   font-size: 15px;
 }
+
+.network-layout .featured-host .machine.offline-machine,
+.featured-host .machine.offline-machine,
+.machine.offline-machine {
+  grid-template-rows: 48px 142px minmax(100px, 1fr) 40px;
+  gap: 16px;
+  background: #1b1b1b;
+}
+.pill.disconnected {
+  color: #e5ae51;
+  background: #e5ae5112;
+}
+.offline-message {
+  grid-row: 2;
+  align-self: center;
+}
+.offline-kicker {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #b3a28b;
+}
+.offline-message h3 {
+  font-size: 28px;
+  font-weight: 500;
+  margin: 8px 0 6px;
+  letter-spacing: -0.4px;
+}
+.offline-message p {
+  font-size: 20px;
+  color: #bbb;
+}
+.offline-message strong {
+  color: #ddd;
+  font-weight: 500;
+}
+.offline-resume {
+  display: block;
+  font-size: 16px;
+  color: #969696;
+  margin-top: 7px;
+}
+.offline-history {
+  grid-row: 3;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.history-heading {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #999;
+  gap: 12px;
+}
+.last-activity {
+  flex: 1;
+  min-height: 0;
+  filter: saturate(0.25);
+}
+.last-activity svg {
+  opacity: 0.4;
+}
+.offline-empty {
+  color: #969696;
+  align-self: center;
+  margin: auto;
+}
+.offline-footer {
+  grid-row: 4;
+  border-top: 1px solid #ffffff10;
+  padding-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 16px;
+  color: #969696;
+}
+.offline-footer strong {
+  color: #ccc;
+  font-weight: 400;
+}

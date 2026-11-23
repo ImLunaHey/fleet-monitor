@@ -4,6 +4,7 @@ import type { Fleet, FleetConfig, Histories, UnifiSnapshot } from "./types";
 import { useEffect, useState } from "react";
 import { useFleet } from "./fleet";
 import { online, bytes, fmt } from "./format";
+import { OfflineMachineCard } from "./components/OfflineMachineCard";
 import { MachineCard } from "./components/MachineCard";
 export function Dashboard({
   fleet,
@@ -24,14 +25,24 @@ export function Dashboard({
   networkError?: boolean;
   networkHistories?: Histories;
 }) {
-  const order = [...new Set([...(config.order || []), ...Object.keys(fleet)])].filter(
-    (name) => fleet[name],
+  const expected = new Set(config.alertHosts || []);
+  const order = [...new Set([...(config.order || []), ...expected, ...Object.keys(fleet)])].filter(
+    (name) => fleet[name] || expected.has(name) || name === config.featuredHost,
   );
   const compact = new Set(config.compactHosts || []),
     featured = config.featuredHost;
   const live = order.filter((name) => online(fleet[name], now));
-  const regular = live.filter((name) => name !== featured && !compact.has(name));
-  const offline = order.filter((name) => !online(fleet[name], now) && !compact.has(name));
+  const regular = order.filter(
+    (name) =>
+      name !== featured && !compact.has(name) && (fleet[name]?.metrics || expected.has(name)),
+  );
+  const offline = order.filter(
+    (name) =>
+      !online(fleet[name], now) &&
+      !compact.has(name) &&
+      !regular.includes(name) &&
+      name !== featured,
+  );
   return (
     <main className={config.networkEnabled ? "network-layout" : undefined}>
       <header>
@@ -60,18 +71,33 @@ export function Dashboard({
                 history={histories[name]}
                 now={now}
               />
-            ) : null;
+            ) : (
+              <OfflineMachineCard
+                key={name}
+                name={name}
+                metrics={host?.metrics}
+                history={histories[name]}
+                now={now}
+              />
+            );
           })}
         </section>
         {featured && (
           <section className="featured-host" aria-label="Featured machine">
-            {online(fleet[featured], now) && (
+            {online(fleet[featured], now) ? (
               <MachineCard
                 name={featured}
                 metrics={fleet[featured].metrics}
                 history={histories[featured]}
                 featured
                 driveSlots={config.driveSlots?.[featured]}
+                now={now}
+              />
+            ) : (
+              <OfflineMachineCard
+                name={featured}
+                metrics={fleet[featured]?.metrics}
+                history={histories[featured]}
                 now={now}
               />
             )}

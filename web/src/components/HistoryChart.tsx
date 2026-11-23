@@ -33,6 +33,7 @@ export function HistoryChart({
   network = {},
   maxGap = 10,
   now,
+  frozen = false,
 }: {
   kind: "cpu" | "gpu" | "network";
   history?: HistoryPoint[];
@@ -40,6 +41,7 @@ export function HistoryChart({
   network?: Network;
   maxGap?: number;
   now?: number;
+  frozen?: boolean;
 }) {
   const isNetwork = kind === "network";
   const max = isNetwork
@@ -83,7 +85,9 @@ export function HistoryChart({
           viewBox="0 0 600 100"
           preserveAspectRatio="none"
           role="img"
-          aria-label={`${kind} over the last two minutes`}
+          aria-label={
+            frozen ? `${kind} last recorded activity` : `${kind} over the last two minutes`
+          }
         >
           {[0, 50, 100].map((y) => (
             <path key={y} className="gridline" d={`M0 ${y}H600`} />
@@ -103,13 +107,19 @@ export function HistoryChart({
           ))}
         </div>
         <div className="x-axis">
-          <span>−2 min</span>
-          <span>−1 min</span>
-          <span>Now</span>
+          {[120, 60, 0].map((offset) => (
+            <span key={offset}>
+              {frozen && finite(now)
+                ? new Date((now - offset) * 1000).toLocaleTimeString("en-GB")
+                : offset
+                  ? `−${offset / 60} min`
+                  : "Now"}
+            </span>
+          ))}
         </div>
         {unavailable && <div className="unavailable">{unavailable}</div>}
       </div>
-      {isNetwork && (
+      {isNetwork && !frozen && (
         <div className="row">
           <span>
             ↓ {bytes(network.download)}/s ↑ {bytes(network.upload)}/s

@@ -62,9 +62,8 @@ const column = <T,>(
 const driveColumn = column<Drive>;
 const datasetColumn = column<Dataset>;
 const driveColumns = [
-  driveColumn("port", "ATA", "4%", (d) => d.port ?? "—"),
   driveColumn("device", "Device", "6%", (d) => d.device || "—"),
-  driveColumn("id", "Drive ID", "18%", (d) => {
+  driveColumn("id", "Drive ID", "22%", (d) => {
     const id = (d.path || d.name).replace(/^.*\//, "").replace(/-part\d+$/, "");
     return <span title={id}>{id.split("_").at(-1) || id}</span>;
   }),
@@ -220,8 +219,8 @@ export function ZfsPanel({
       <h3 className="section-heading">Datasets</h3>
       <DataTable label="ZFS datasets" columns={datasetColumns} data={z.datasets || []} />
       <p className="note">
-        {mapped && "Slot = physical bay; — unmapped. "}ATA = controller port. ↻ replacement. R/W/CRC
-        = errors. ¹ Dataset totals share free space; raw includes parity.
+        {mapped && "Slot = physical bay; — unmapped. "}↻ replacement. R/W/CRC = errors. ¹ Dataset
+        totals share free space; raw includes parity.
       </p>
     </div>
   );

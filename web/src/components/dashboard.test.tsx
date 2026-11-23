@@ -9,7 +9,7 @@ import { ZfsPanel } from "./ZfsPanel";
 import { appendHistory } from "../fleet";
 import { now, metrics } from "../test-fixtures";
 describe("fleet display", () => {
-  it("keeps offline hosts compact and ages stale readings out", () => {
+  it("retains stale known hosts and keeps unseen offline hosts compact", () => {
     render(
       <Dashboard
         now={now}
@@ -20,7 +20,7 @@ describe("fleet display", () => {
         }}
       />,
     );
-    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
     expect(screen.getByText("sleeping")).toBeInTheDocument();
     expect(screen.getByText("old")).toBeInTheDocument();
     expect(screen.getByText("1 / 3 machines online")).toBeInTheDocument();
@@ -165,12 +165,12 @@ describe("ZFS", () => {
     ],
     datasets: [],
   };
-  it("keeps the replaced drive, numbered ports, activity and colour semantics", () => {
+  it("keeps the replaced drive, activity and colour semantics without ATA clutter", () => {
     render(<ZfsPanel zfs={z} now={now} />);
     expect(screen.getByText("MISSING")).toHaveClass("bad");
     expect(screen.getByText("ONLINE")).toHaveClass("good");
     expect(screen.getByText("90%")).toHaveClass("warn");
-    expect(screen.getAllByText("2")).toHaveLength(2);
+    expect(screen.queryByRole("columnheader", { name: "ATA" })).not.toBeInTheDocument();
     expect(screen.getByText("2.0 KiB")).toHaveClass("write-rate");
     expect(screen.getByRole("meter", { name: "Rebuild progress" })).toHaveAttribute(
       "aria-valuenow",

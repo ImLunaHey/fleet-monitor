@@ -38,7 +38,7 @@ describe("physical drive slots", () => {
       expect(driveSlot(drive("SERIAL"), { "6": { slot } })).toBeUndefined();
     },
   );
-  it("sorts physical slots, preserves ATA ports, and leaves unmapped slots unknown", () => {
+  it("sorts physical slots, hides the ATA column, and leaves unmapped slots unknown", () => {
     render(
       <ZfsPanel
         now={now}
@@ -52,7 +52,7 @@ describe("physical drive slots", () => {
         .getAllByRole("columnheader")
         .slice(0, 2)
         .map((c) => c.textContent),
-    ).toEqual(["Slot", "ATA"]);
+    ).toEqual(["Slot", "Device"]);
     expect(
       rows.slice(1).map((r) =>
         within(r)
@@ -61,9 +61,9 @@ describe("physical drive slots", () => {
           .map((c) => c.textContent),
       ),
     ).toEqual([
-      ["2", "6"],
-      ["6", "2"],
-      ["—", "1"],
+      ["2", "—"],
+      ["6", "—"],
+      ["—", "—"],
     ]);
     expect(screen.queryByText("6*")).not.toBeInTheDocument();
   });
@@ -101,6 +101,6 @@ describe("physical drive slots", () => {
   it("does not invent physical slots for an unconfigured host", () => {
     render(<ZfsPanel now={now} zfs={pool([drive("A")])} />);
     expect(screen.queryByRole("columnheader", { name: "Slot" })).not.toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "ATA" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "ATA" })).not.toBeInTheDocument();
   });
 });

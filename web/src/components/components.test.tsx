@@ -245,14 +245,14 @@ describe("ZfsPanel", () => {
         .getAllByRole("columnheader")
         .slice(0, 5)
         .map((h) => h.textContent),
-    ).toEqual(["ATA", "Device", "Drive ID", "↻", "State"]);
+    ).toEqual(["Device", "Drive ID", "↻", "State", "Size"]);
     const replacement = screen.getByLabelText("Replacement drive");
     const row = replacement.closest("tr");
     expect(row).not.toBeNull();
     const cells = within(row!).getAllByRole("cell");
-    expect(cells[1]).toHaveTextContent(/^sda$/);
-    expect(cells[2]).toHaveTextContent(/^SERIAL123$/);
-    expect(cells[3]).toContainElement(replacement);
+    expect(cells[0]).toHaveTextContent(/^sda$/);
+    expect(cells[1]).toHaveTextContent(/^SERIAL123$/);
+    expect(cells[2]).toContainElement(replacement);
     expect(screen.getByTitle("ata-Example_SERIAL123")).toBeInTheDocument();
     expect(screen.getByText("10 B / 30 B")).toBeInTheDocument();
   });
@@ -284,8 +284,8 @@ describe("ZfsPanel", () => {
     expect(screen.getByText("2/0/0")).toHaveClass("bad");
     expect(screen.getByText("FINISHED")).toBeInTheDocument();
     const rows = within(screen.getByRole("table", { name: "ZFS drives" })).getAllByRole("row");
-    expect(within(rows[1]).getAllByRole("cell")[0]).toHaveTextContent("2");
-    expect(within(rows[1]).getAllByRole("cell")[6]).toHaveTextContent("—");
+    expect(within(rows[1]).getAllByRole("cell")[0]).toHaveTextContent("sdb");
+    expect(within(rows[1]).getAllByRole("cell")[5]).toHaveTextContent("—");
   });
   it("handles absent optional pool fields and unknown totals", () => {
     render(<ZfsPanel now={now} zfs={{ available: true, timestamp: now, state: "ONLINE" }} />);

@@ -59,6 +59,7 @@ describe("telemetry requests", () => {
     });
     let timestamp = now;
     let failed = false;
+    let disconnected = false;
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -67,7 +68,9 @@ describe("telemetry requests", () => {
             JSON.stringify(
               url === "/api/config"
                 ? { title: "Lab" }
-                : { host: { online: true, metrics: { ...metrics(), timestamp } } },
+                : disconnected
+                  ? { host: { online: false } }
+                  : { host: { online: true, metrics: { ...metrics(), timestamp } } },
             ),
             { status: failed && url === "/api/fleet" ? 503 : 200 },
           ),
@@ -81,6 +84,14 @@ describe("telemetry requests", () => {
       await client.refetchQueries({ queryKey: ["fleet"] });
     });
     await waitFor(() => expect(result.current.histories.host).toHaveLength(2));
+    disconnected = true;
+    await act(async () => {
+      await client.refetchQueries({ queryKey: ["fleet"] });
+    });
+    await waitFor(() => expect(result.current.fleet.host.online).toBe(false));
+    expect(result.current.fleet.host.metrics?.timestamp).toBe(timestamp);
+    expect(result.current.histories.host).toHaveLength(2);
+    disconnected = false;
     failed = true;
     await act(async () => {
       await client.refetchQueries({ queryKey: ["fleet"] });
@@ -145,7 +156,7 @@ describe("dashboard lifecycle", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(13000);
     });
-    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+    expect(screen.getByRole("article")).toHaveClass("offline-machine");
     expect(screen.getByText("host")).toBeInTheDocument();
     const clear = vi.spyOn(globalThis, "clearInterval");
     unmount();
@@ -156,7 +167,7 @@ describe("dashboard lifecycle", () => {
     render(
       <Dashboard now={now} config={{ featuredHost: "nas" }} fleet={{ nas: { online: false } }} />,
     );
-    expect(screen.getByRole("region", { name: "Featured machine" })).toBeEmptyDOMElement();
+    expect(screen.getByRole("article", { name: "nas machine" })).toHaveClass("offline-machine");
     expect(screen.getByText("nas")).toBeInTheDocument();
   });
 });
