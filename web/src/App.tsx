@@ -1,3 +1,4 @@
+import { DashboardAccess } from "./components/DashboardAccess";
 import { HeaderAlerts, collectAlerts } from "./components/HeaderAlerts";
 import { NetworkStrip } from "./components/NetworkStrip";
 import type { Fleet, FleetConfig, Histories, UnifiSnapshot } from "./types";
@@ -55,6 +56,7 @@ export function Dashboard({
           now={now}
         />
         <div className="clock">{new Date(now * 1000).toLocaleString("en-GB")}</div>
+        <DashboardAccess url={config.publicUrl} />
       </header>
       {config.networkEnabled && (
         <NetworkStrip data={network} now={now} error={networkError} histories={networkHistories} />

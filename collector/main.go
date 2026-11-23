@@ -449,18 +449,11 @@ func main() {
 	}
 	dashboardConfig := M{}
 	_ = json.Unmarshal([]byte(env("DASHBOARD_CONFIG", "{}")), &dashboardConfig)
-	allowed := map[string]bool{}
-	for _, ip := range strings.Split(os.Getenv("METRICS_ALLOWED_CLIENTS"), ",") {
-		if ip != "" {
-			allowed[ip] = true
-		}
+	allowed, err := parseClients(env("METRICS_ALLOWED_CLIENTS", "127.0.0.1,::1"))
+	if err != nil {
+		log.Fatal(err)
 	}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-		if len(allowed) > 0 && !allowed[ip] {
-			http.Error(w, "Forbidden", 403)
-			return
-		}
 		if r.Method != "GET" {
 			http.Error(w, "Method not allowed", 405)
 			return
@@ -513,6 +506,6 @@ func main() {
 			log.Print(e)
 		}
 	})
-	server := &http.Server{Addr: net.JoinHostPort(env("METRICS_BIND", "127.0.0.1"), env("METRICS_PORT", "8099")), Handler: handler, ReadHeaderTimeout: 3 * time.Second, WriteTimeout: 5 * time.Second, IdleTimeout: 30 * time.Second}
+	server := &http.Server{Addr: net.JoinHostPort(env("METRICS_BIND", "127.0.0.1"), env("METRICS_PORT", "8099")), Handler: restrictClients(allowed, handler), ReadHeaderTimeout: 3 * time.Second, WriteTimeout: 5 * time.Second, IdleTimeout: 30 * time.Second}
 	log.Fatal(server.ListenAndServe())
 }
