@@ -1,0 +1,74 @@
+name: Release Please
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+      prs-created: ${{ steps.release.outputs.prs_created }}
+      pr: ${{ steps.release.outputs.pr }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+  prepare:
+    needs: release-please
+    if: needs.release-please.outputs.prs-created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      RELEASE_BRANCH: ${{ fromJSON(needs.release-please.outputs.pr).headBranchName }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: collector/go.mod
+          cache-dependency-path: collector/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.1'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - name: Build tested assets and pin their hashes in the release PR
+        run: |
+          release_version=$(node -p 'require("./.release-please-manifest.json")["."]')
+          scripts/build-release.sh "v$release_version"
+          cp dist-release/release.json nix/release.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add nix/release.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): pin v$release_version artifacts"
+            git push origin "HEAD:$RELEASE_BRANCH"
+          fi
+      # GITHUB_TOKEN-created commits do not trigger push/PR workflows.
+      - name: Explicitly run checks on the prepared release branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run checks.yml --ref "$RELEASE_BRANCH"
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag }}

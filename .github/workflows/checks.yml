@@ -1,5 +1,6 @@
 name: Checks
 on:
+  workflow_dispatch:
   push:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -47,3 +48,11 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci && npm run check
         working-directory: web
+  release-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.1'
+      - run: node --test scripts/publish-release.test.mjs

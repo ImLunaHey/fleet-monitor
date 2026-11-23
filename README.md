@@ -217,23 +217,25 @@ Flake checks use those source builds. To test a local code change through a
 module, override `package` and `dashboardPackage` with those packages; default
 packages intentionally use the pinned released version.
 
-To prepare a release, use Go 1.25.5 and Node 22.21.1, then:
+Releases are managed by [release-please](https://github.com/googleapis/release-please-action).
+Conventional Commits on main update a release PR with a version and changelog.
+CI builds the single HTML file and all four collector binaries, then commits their
+SHA-256 hashes to that PR. Checks are explicitly dispatched for the bot branch,
+so no personal access token is needed. Repository Actions settings must allow
+GitHub Actions to create pull requests.
 
-```sh
-(cd web && npm ci)
-scripts/build-release.sh v0.2.0
-cp dist-release/release.json nix/release.json
-# Commit source + manifest using Conventional Commits, then tag and push.
-git tag v0.2.0
-git push origin main v0.2.0
-```
+Review the release PR and its checks before merging. Merging creates a tagged
+draft release and invokes publication directly in the same workflow (the built-in
+GitHub token does not trigger separate tag workflows). Publication runs Go tests
+on Linux/macOS and all frontend quality/coverage checks, rebuilds the artifacts,
+and verifies every hash against the merged Nix manifest. Only then does it upload
+the seven assets and publish the release. Existing assets are never overwritten.
+Consumers update their flake lock to adopt the release.
 
-For subsequent releases, increment the version. The tag workflow runs Go tests
-on Linux/macOS, frontend quality/coverage checks, and builds all four binaries
-with CGO disabled. It verifies every artifact against the committed manifest
-before publishing the HTML, executables, manifest and SHA256SUMS. Release assets
-are never overwritten. Update the manifest and release together when source
-changes; consumers update their flake lock to adopt the release.
+To retry an interrupted publication, dispatch the Release workflow with its
+existing tag. Already uploaded assets are compared byte-for-byte before proceeding.
+To reproduce a build locally, use Go 1.25.5 and Node 22.21.1, run
+`(cd web && npm ci)`, then `scripts/build-release.sh vX.Y.Z`.
 
 ## Development
 
