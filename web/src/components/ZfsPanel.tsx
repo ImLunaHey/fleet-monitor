@@ -164,20 +164,7 @@ export function ZfsPanel({
     ? [
         driveColumn("slot", "Slot", "4%", (d) => {
           const location = driveSlot(d, slots);
-          return location ? (
-            <span
-              title={
-                location.inferred
-                  ? "Physical slot inferred, not visually confirmed"
-                  : "Physical enclosure slot"
-              }
-            >
-              {location.slot}
-              {location.inferred ? "*" : ""}
-            </span>
-          ) : (
-            "—"
-          );
+          return location ? <span title="Physical enclosure slot">{location.slot}</span> : "—";
         }),
         ...driveColumns.map((c) =>
           c.id === "id" || c.id === "errors" ? { ...c, size: c.size! - 2 } : c,
@@ -233,8 +220,8 @@ export function ZfsPanel({
       <h3 className="section-heading">Datasets</h3>
       <DataTable label="ZFS datasets" columns={datasetColumns} data={z.datasets || []} />
       <p className="note">
-        {mapped && "Slot = physical bay; — unmapped; * inferred. "}ATA = controller port. ↻
-        replacement. R/W/CRC = errors. ¹ Dataset totals share free space; raw includes parity.
+        {mapped && "Slot = physical bay; — unmapped. "}ATA = controller port. ↻ replacement. R/W/CRC
+        = errors. ¹ Dataset totals share free space; raw includes parity.
       </p>
     </div>
   );

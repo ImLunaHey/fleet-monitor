@@ -38,11 +38,11 @@ describe("physical drive slots", () => {
       expect(driveSlot(drive("SERIAL"), { "6": { slot } })).toBeUndefined();
     },
   );
-  it("sorts physical slots, preserves ATA ports, and distinguishes unknown and inferred slots", () => {
+  it("sorts physical slots, preserves ATA ports, and leaves unmapped slots unknown", () => {
     render(
       <ZfsPanel
         now={now}
-        slots={{ "6": { slot: 2 }, "2": { slot: 6, inferred: true } }}
+        slots={{ "6": { slot: 2 }, "2": { slot: 6 } }}
         zfs={pool([drive("B", 2), drive("UNKNOWN", 1), drive("A", 6)])}
       />,
     );
@@ -62,12 +62,10 @@ describe("physical drive slots", () => {
       ),
     ).toEqual([
       ["2", "6"],
-      ["6*", "2"],
+      ["6", "2"],
       ["—", "1"],
     ]);
-    expect(screen.getByTitle("Physical slot inferred, not visually confirmed")).toHaveTextContent(
-      "6*",
-    );
+    expect(screen.queryByText("6*")).not.toBeInTheDocument();
   });
   it("keeps replacement drives in the same physical slot without adding their serials", () => {
     render(

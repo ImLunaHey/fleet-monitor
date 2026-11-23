@@ -112,7 +112,6 @@ export interface Host {
 export type Fleet = Record<string, Host>;
 export interface DriveSlot {
   slot: number;
-  inferred?: boolean;
 }
 export type DriveSlots = Record<string, DriveSlot>;
 export interface FleetConfig {

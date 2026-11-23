@@ -21,7 +21,6 @@ let inherit (lib) mkEnableOption mkOption types; in {
       type = types.attrsOf (types.attrsOf (types.submodule {
         options = {
           slot = mkOption { type = types.ints.positive; description = "Physical enclosure slot number."; };
-          inferred = mkOption { type = types.bool; default = false; description = "Mark a slot inferred rather than physically confirmed."; };
         };
       }));
       apply = mappings:

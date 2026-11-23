@@ -277,13 +277,13 @@ specify the corresponding physical slot. For example, ATA 6 connects to slot 2:
 ```nix
 services.fleet-monitor.driveSlots.nas = {
   "6" = { slot = 2; };
-  "2" = { slot = 6; inferred = true; };
+  "2" = { slot = 6; };
 };
 ```
 
 This mapping survives drive replacements and changes to serials or /dev/sdX names.
 The table sorts by physical slot, keeps a separate ATA column, and marks missing
-or unmapped ports `—`. Inferred locations have a visible `*`. Without a mapping,
+or unmapped ports `—`. Without a mapping,
 only ATA ports are shown. Old and replacement drives on the same ATA port display
 the same physical slot automatically. Update the mapping if the enclosure wiring
 changes. Hosts without Nix can set the same `driveSlots` object in
