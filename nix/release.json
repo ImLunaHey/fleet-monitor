@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.0",
+  "version": "v0.4.0",
   "assets": {
-    "fleet-monitor-dashboard.html": "sha256-xuR/bIk/YFPUSJACJ2ERrMPiKg7PS3jCBdSD2aLAiJA=",
+    "fleet-monitor-dashboard.html": "sha256-3qK1O3DS0xgYbcfycehxJjO+vEq5BfvMCynzG9gkcbw=",
     "fleet-monitor-x86_64-linux": "sha256-pKlMVTSTdqDh7WgUXgifR+rBjdGi3nxEY3a31Ie9jCU=",
     "fleet-monitor-aarch64-linux": "sha256-YpzJuURBvvbtO/gXXQnzLjIqP+V7lnBwc1uXChy6KsM=",
     "fleet-monitor-x86_64-darwin": "sha256-+EvviK3uEK5MIq/Rx3Vf+sPd4f2xxZSGUGZA5VCBKyU=",
