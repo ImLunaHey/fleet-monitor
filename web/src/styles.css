@@ -993,3 +993,405 @@ header {
   color: #ccc;
   font-weight: 400;
 }
+
+/* The QR code is generated locally; telemetry and addresses never go to a QR service. */
+header:has(.dashboard-access) {
+  height: auto;
+  min-height: 64px;
+  flex-shrink: 0;
+}
+.dashboard-access {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.dashboard-access svg {
+  display: block;
+  border-radius: 8px;
+}
+.dashboard-access > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 14px;
+}
+.dashboard-access strong {
+  font-weight: 500;
+  color: var(--text);
+}
+.dashboard-access span {
+  color: var(--muted);
+}
+.dashboard-access a {
+  color: var(--blue);
+  text-underline-offset: 3px;
+}
+.dashboard-access a:focus-visible,
+.table-scroll:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+}
+.table-scroll {
+  min-width: 0;
+}
+
+/* Touch layouts scroll naturally; the wall display keeps its existing grid. */
+@media (max-width: 2400px), (pointer: coarse), (max-height: 800px) {
+  body {
+    overflow: auto;
+  }
+  main,
+  main.network-layout {
+    height: auto;
+    min-height: 100svh;
+    padding: 20px;
+    gap: 20px;
+  }
+  main > header,
+  .network-layout header {
+    height: auto;
+    min-height: 0;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header-alerts {
+    margin-right: 0;
+    flex-wrap: wrap;
+  }
+  .wall {
+    grid-template-columns: minmax(0, 1fr);
+    flex: none;
+  }
+  .machines {
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    align-items: start;
+  }
+  .machine,
+  .featured-host .machine,
+  .network-layout .featured-host .machine {
+    grid-template-rows: auto auto 170px auto auto auto auto;
+    padding: 20px;
+    gap: 14px;
+  }
+  .machine > .head {
+    min-height: 48px;
+  }
+  .subtitle,
+  .row,
+  .label,
+  .health-line {
+    font-size: 16px;
+    line-height: 22px;
+  }
+  .health-line {
+    white-space: normal;
+  }
+  .network-strip {
+    height: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .network-card {
+    min-height: 160px;
+    padding: 16px;
+    gap: 12px;
+  }
+  .network-card:first-child {
+    grid-column: 1 / -1;
+  }
+  .network-unavailable {
+    grid-template-columns: 1fr;
+  }
+  .gateway-expanded {
+    gap: 16px;
+  }
+  .featured-host {
+    min-width: 0;
+  }
+  .compact-zfs {
+    min-width: 0;
+    gap: 12px;
+  }
+  .table-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .zfs-table[aria-label="ZFS drives"] {
+    min-width: 850px;
+  }
+  .zfs-table[aria-label="ZFS datasets"] {
+    min-width: 500px;
+  }
+  .zfs-table {
+    font-size: 16px;
+  }
+  .zfs-table td,
+  .zfs-table th {
+    padding: 10px 4px;
+  }
+  .compact-zfs .row {
+    font-size: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .scan-reading {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .bottomline,
+  .offline-hosts {
+    flex-wrap: wrap;
+  }
+  .machine.offline-machine,
+  .featured-host .machine.offline-machine,
+  .network-layout .featured-host .machine.offline-machine {
+    grid-template-rows: auto auto 140px auto;
+    gap: 16px;
+  }
+  .offline-message p {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .graphs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .graphs > .network {
+    grid-column: 1 / -1;
+  }
+  .machine,
+  .featured-host .machine,
+  .network-layout .featured-host .machine {
+    grid-template-rows: auto auto 300px auto auto auto auto;
+  }
+  .switch-body,
+  .wifi-body {
+    gap: 12px;
+  }
+  .radio-grid {
+    gap: 10px;
+  }
+  .port-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .network-foot {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  main,
+  main.network-layout {
+    padding: 12px;
+    gap: 16px;
+  }
+  .wall,
+  .machines,
+  .network-strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  main > header {
+    align-items: flex-start;
+  }
+  main > header > div:first-child {
+    flex-basis: 100%;
+  }
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+  }
+  .clock,
+  .network-layout header .clock {
+    font-size: 14px;
+  }
+  .header-alerts {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .alert-chip {
+    white-space: normal;
+  }
+  .dashboard-access {
+    order: 4;
+  }
+  .machine,
+  .featured-host .machine,
+  .network-layout .featured-host .machine {
+    padding: 16px;
+  }
+  h2 {
+    font-size: 28px;
+  }
+  .subtitle {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .machine > .head {
+    align-items: flex-start;
+  }
+  .pill {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  .tile {
+    padding: 10px 12px;
+  }
+  .value {
+    font-size: 28px;
+  }
+  .graphs {
+    gap: 10px;
+  }
+  .chart-box {
+    padding: 10px;
+  }
+  .gpu-panel .row,
+  .details .row {
+    flex-wrap: wrap;
+  }
+  .row strong {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .footer,
+  .offline-footer,
+  .llm-line {
+    flex-wrap: wrap;
+  }
+  .llm-line {
+    white-space: normal;
+  }
+  .llm-name {
+    max-width: 100%;
+  }
+  .compact-zfs {
+    padding: 12px;
+  }
+  .gateway-expanded {
+    height: auto;
+    flex-wrap: wrap;
+  }
+  .gateway-clients {
+    min-width: 0;
+    flex: 1;
+  }
+  .wan-readings {
+    min-width: 0;
+    font-size: 16px;
+  }
+  .wan-chart {
+    flex-basis: 100%;
+  }
+  .network-card {
+    min-height: 170px;
+  }
+  .network-foot > span {
+    flex-wrap: wrap;
+  }
+}
+.dashboard-access {
+  max-width: 100%;
+}
+.dashboard-access > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .switch-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .port-grid {
+    flex: none;
+  }
+  .network-title {
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .net-online {
+    white-space: nowrap;
+  }
+}
+@media (min-width: 701px) and (max-width: 900px) {
+  .machines {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .graphs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .machine,
+  .featured-host .machine,
+  .network-layout .featured-host .machine {
+    grid-template-rows: auto auto 510px auto auto auto auto;
+  }
+  .value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    white-space: normal;
+  }
+  .value small {
+    margin-left: 0;
+  }
+  .x-axis {
+    white-space: nowrap;
+  }
+}
+
+/* Keep storage content within its grid row, even with more datasets/drives. */
+.compact-zfs {
+  overflow: auto;
+}
+.compact-zfs > * {
+  flex-shrink: 0;
+}
+.network-layout .compact-zfs {
+  padding: 14px;
+  gap: 6px;
+}
+.dashboard-access {
+  gap: 8px;
+}
+.dashboard-access svg {
+  border-radius: 4px;
+}
+@media (max-width: 2400px), (pointer: coarse), (max-height: 800px) {
+  .compact-zfs {
+    overflow: visible;
+  }
+  .network-layout .compact-zfs {
+    padding: 12px;
+    gap: 12px;
+  }
+  .value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    white-space: normal;
+  }
+  .value small {
+    margin-left: 0;
+  }
+}
+@media (min-width: 2401px) and (min-height: 801px) and (pointer: fine) {
+  .compact-zfs .zfs-table td {
+    padding: 4px;
+  }
+  .compact-zfs .zfs-table th {
+    padding: 6px 4px;
+  }
+  .compact-zfs .section-heading {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+}

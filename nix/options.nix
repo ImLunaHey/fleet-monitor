@@ -9,11 +9,12 @@ let inherit (lib) mkEnableOption mkOption types; in {
     interface = mkOption { type = types.nullOr types.str; default = null; description = "Network interface to measure; null selects the default IPv4 route."; };
     listenAddress = mkOption { type = types.str; default = "127.0.0.1"; description = "Bind address. Use a trusted LAN/VPN address for remote agents."; };
     port = mkOption { type = types.port; default = 8099; description = "HTTP port."; };
-    allowedClients = mkOption { type = types.listOf types.str; default = [ "127.0.0.1" "::1" ]; description = "Exact source IP addresses permitted to read metrics; no CIDR ranges."; };
+    allowedClients = mkOption { type = types.listOf types.str; default = [ "127.0.0.1" "::1" ]; description = "Source IP addresses or CIDR subnets permitted to access the dashboard and metrics."; };
     peers = mkOption { type = types.attrsOf types.str; default = { }; description = "Fixed peer names mapped to their /api/metrics URLs."; };
     healthChecks = mkOption { type = types.attrsOf types.str; default = { }; description = "Named HTTP health URLs; HTTP 200 is healthy."; };
     llamaUrl = mkOption { type = types.nullOr types.str; default = null; description = "Optional llama.cpp server base URL. Enable --metrics on the server; only model identity and aggregate activity are collected."; };
     title = mkOption { type = types.str; default = "Fleet Monitor"; description = "Heading above the host cards."; };
+    publicUrl = mkOption { type = types.nullOr types.str; default = null; description = "Reachable HTTP(S) dashboard URL shown as a QR code. This does not change binding or access rules."; };
     featuredHost = mkOption { type = types.nullOr types.str; default = null; description = "Host shown in the full-height right column (usually the ZFS host)."; };
     hostOrder = mkOption { type = types.listOf types.str; default = [ ]; description = "Preferred host order; other configured hosts follow."; };
     compactHosts = mkOption { type = types.listOf types.str; default = [ ]; description = "Hosts shown in a compact footer instead of a card."; };

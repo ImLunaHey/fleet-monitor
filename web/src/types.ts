@@ -115,6 +115,7 @@ export interface DriveSlot {
 }
 export type DriveSlots = Record<string, DriveSlot>;
 export interface FleetConfig {
+  publicUrl?: string | null;
   driveSlots?: Record<string, DriveSlots>;
   alertHosts?: string[];
   hideOfflineFooter?: boolean;

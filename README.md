@@ -304,3 +304,33 @@ remain compact. Last-known hardware details and frozen charts are retained in
 memory for the current dashboard session. Browser-persisted graph history remains
 limited to two minutes; an offline host after a reload may have no recorded
 identity or history yet, which is shown explicitly rather than invented.
+
+### Phones, tablets, and LAN access
+
+The dashboard reflows into a scrolling layout on phones and tablets. Storage tables
+keep their readable column widths and scroll horizontally; the desktop kiosk
+keeps its full-screen grid.
+
+To make a dashboard reachable on a trusted network and show a scan-to-open QR code:
+
+```nix
+services.fleet-monitor = {
+  enable = true;
+  mode = "dashboard";
+  listenAddress = "0.0.0.0";
+  allowedClients = [ "127.0.0.1" "::1" "192.168.1.0/24" ];
+  publicUrl = "http://192.168.1.50:8099/";
+};
+networking.firewall.interfaces.enp1s0.allowedTCPPorts = [ 8099 ];
+```
+
+Replace the interface, subnet, and URL with your own. Reserve the server's address
+in DHCP or use a LAN DNS name so the QR code stays valid. `publicUrl` only controls
+the link and locally generated QR code; it does not open a port or grant access.
+The allowlist accepts exact IPv4/IPv6 addresses and CIDR subnets, checks the actual
+TCP client address, and ignores forwarded headers. Standalone collectors default
+to loopback access when `METRICS_ALLOWED_CLIENTS` is unset; invalid entries fail
+startup. Everyone in an allowed subnet can read dashboard telemetry, so use a
+trusted LAN/VPN. Leave WAN port forwarding disabled. Phones must join an allowed
+network (guest Wi-Fi isolation can prevent access). QR generation needs no
+external service. Set `publicUrl = null` (the default) to hide the QR panel.

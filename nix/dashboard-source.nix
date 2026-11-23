@@ -4,7 +4,7 @@ buildNpmPackage {
   version = "0.1.0";
   src = lib.cleanSource ../web;
   nodejs = nodejs_22;
-  npmDepsHash = "sha256-m/e5ymV7JkmNsS5m3zhH6+Xr9p7CSGw6oVdbQ35SGm8=";
+  npmDepsHash = "sha256-MDw1mMF7gP4Db8SKJRHc7Yhm1bncG/czfPdEDXhCrD8=";
   doCheck = true;
   checkPhase = ''
     runHook preCheck
