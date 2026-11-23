@@ -27,6 +27,22 @@ const data = (devices: UnifiDevice[]): UnifiSnapshot => ({
   wireless: 10,
 });
 describe("NetworkStrip", () => {
+  it("keeps gateway, switches and access points in a stable order without mutating telemetry", () => {
+    const devices = [
+      device({ id: "ap", name: "Wi-Fi", kind: "ap" }),
+      device({ id: "switch-b", name: "Switch B", kind: "switch" }),
+      device({ id: "gateway", name: "Gateway", kind: "gateway" }),
+      device({ id: "switch-a", name: "Switch A", kind: "switch" }),
+    ];
+    render(<NetworkStrip now={now} data={data(devices)} />);
+    expect(screen.getAllByRole("article").map((card) => card.getAttribute("aria-label"))).toEqual([
+      "Gateway",
+      "Switch A",
+      "Switch B",
+      "Wi-Fi",
+    ]);
+    expect(devices[0]?.id).toBe("ap");
+  });
   it("renders gateway counts, real zero load, and uptime", () => {
     render(<NetworkStrip now={now} data={data([device({ name: "Gateway" })])} />);
     expect(screen.getByText("19")).toBeInTheDocument();

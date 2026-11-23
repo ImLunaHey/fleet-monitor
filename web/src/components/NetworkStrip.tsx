@@ -1,5 +1,6 @@
 import type { UnifiDevice, UnifiPort, UnifiSnapshot } from "../types";
 import { finite, fmt, fresh } from "../format";
+const deviceOrder = { gateway: 0, switch: 1, ap: 2 };
 export function uptime(seconds: unknown) {
   if (!finite(seconds)) return "—";
   return `${Math.floor(seconds / 86400)}d ${Math.floor(seconds / 3600) % 24}h`;
@@ -141,34 +142,38 @@ export function NetworkStrip({
     );
   return (
     <section className="network-strip" aria-label="UniFi network">
-      {(data.devices ?? []).map((device) => {
-        const healthy = device.state === "ONLINE" && fresh(device.timestamp, now, 90);
-        return (
-          <article className="network-card" key={device.id} aria-label={device.name}>
-            <div className="network-title">
-              <h2>{device.name}</h2>
-              <span className={healthy ? "net-online" : "warn"}>
-                {healthy
-                  ? "● Online"
-                  : device.state === "ONLINE"
-                    ? "Telemetry stale"
-                    : device.state}
-              </span>
-            </div>
-            {healthy ? (
-              device.kind === "gateway" ? (
-                <GatewayMetrics device={device} data={data} />
-              ) : device.kind === "ap" ? (
-                <RadioMetrics device={device} />
+      {(data.devices ?? [])
+        .toSorted(
+          (a, b) => deviceOrder[a.kind] - deviceOrder[b.kind] || a.name.localeCompare(b.name),
+        )
+        .map((device) => {
+          const healthy = device.state === "ONLINE" && fresh(device.timestamp, now, 90);
+          return (
+            <article className="network-card" key={device.id} aria-label={device.name}>
+              <div className="network-title">
+                <h2>{device.name}</h2>
+                <span className={healthy ? "net-online" : "warn"}>
+                  {healthy
+                    ? "● Online"
+                    : device.state === "ONLINE"
+                      ? "Telemetry stale"
+                      : device.state}
+                </span>
+              </div>
+              {healthy ? (
+                device.kind === "gateway" ? (
+                  <GatewayMetrics device={device} data={data} />
+                ) : device.kind === "ap" ? (
+                  <RadioMetrics device={device} />
+                ) : (
+                  <SwitchMetrics device={device} />
+                )
               ) : (
-                <SwitchMetrics device={device} />
-              )
-            ) : (
-              <span className="network-foot">Current readings unavailable</span>
-            )}
-          </article>
-        );
-      })}
+                <span className="network-foot">Current readings unavailable</span>
+              )}
+            </article>
+          );
+        })}
     </section>
   );
 }

@@ -122,7 +122,7 @@ export interface UnifiRadio {
 export interface UnifiDevice {
   id: string;
   name: string;
-  kind: string;
+  kind: "gateway" | "switch" | "ap";
   state: string;
   timestamp: number;
   cpu: Reading;
