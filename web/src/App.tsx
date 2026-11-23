@@ -71,6 +71,7 @@ export function Dashboard({
                 metrics={fleet[featured].metrics}
                 history={histories[featured]}
                 featured
+                driveSlots={config.driveSlots?.[featured]}
                 now={now}
               />
             )}

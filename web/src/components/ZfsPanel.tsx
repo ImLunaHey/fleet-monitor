@@ -1,7 +1,8 @@
+import { driveSlot } from "../driveSlots";
 import { scanEstimate } from "../scan";
 import type { ReactNode, CSSProperties } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Drive, Dataset, Zfs } from "../types";
+import type { Drive, Dataset, Zfs, DriveSlots } from "../types";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
 import { bytes, colors, finite, fmt, fresh } from "../format";
 import { StatRow, Meter } from "./Primitives";
@@ -61,7 +62,7 @@ const column = <T,>(
 const driveColumn = column<Drive>;
 const datasetColumn = column<Dataset>;
 const driveColumns = [
-  driveColumn("port", "Port", "4%", (d) => d.port ?? "—"),
+  driveColumn("port", "ATA", "4%", (d) => d.port ?? "—"),
   driveColumn("device", "Device", "6%", (d) => d.device || "—"),
   driveColumn("id", "Drive ID", "18%", (d) => {
     const id = (d.path || d.name).replace(/^.*\//, "").replace(/-part\d+$/, "");
@@ -136,7 +137,15 @@ const datasetColumns = [
   ),
   datasetColumn("free", "Free", "22%", (d) => bytes(d.available)),
 ];
-export function ZfsPanel({ zfs: z, now }: { zfs?: Zfs; now: number }) {
+export function ZfsPanel({
+  zfs: z,
+  now,
+  slots = {},
+}: {
+  zfs?: Zfs;
+  now: number;
+  slots?: DriveSlots;
+}) {
   if (!z?.available || !fresh(z.timestamp, now, 35))
     return (
       <div className="compact-zfs">
@@ -150,8 +159,36 @@ export function ZfsPanel({ zfs: z, now }: { zfs?: Zfs; now: number }) {
     healthy = drives.filter((d) => d.state === "ONLINE").length;
   const errors = (z.read_errors || 0) + (z.write_errors || 0) + (z.checksum_errors || 0),
     scan = z.scan || {};
+  const mapped = Object.keys(slots).length > 0;
+  const columns = mapped
+    ? [
+        driveColumn("slot", "Slot", "4%", (d) => {
+          const location = driveSlot(d, slots);
+          return location ? (
+            <span
+              title={
+                location.inferred
+                  ? "Physical slot inferred, not visually confirmed"
+                  : "Physical enclosure slot"
+              }
+            >
+              {location.slot}
+              {location.inferred ? "*" : ""}
+            </span>
+          ) : (
+            "—"
+          );
+        }),
+        ...driveColumns.map((c) =>
+          c.id === "id" || c.id === "errors" ? { ...c, size: c.size! - 2 } : c,
+        ),
+      ]
+    : driveColumns;
   const sorted = [...drives].sort(
-    (a, b) => (a.port ?? 99) - (b.port ?? 99) || Number(!!b.missing) - Number(!!a.missing),
+    (a, b) =>
+      (driveSlot(a, slots)?.slot ?? Infinity) - (driveSlot(b, slots)?.slot ?? Infinity) ||
+      (a.port ?? 99) - (b.port ?? 99) ||
+      Number(!!b.missing) - Number(!!a.missing),
   );
   return (
     <div className="compact-zfs">
@@ -192,12 +229,12 @@ export function ZfsPanel({ zfs: z, now }: { zfs?: Zfs; now: number }) {
         {root ? ` · ${bytes(root.used)} data used` : ""}
       </StatRow>
       <h3 className="section-heading">Drives · live activity &amp; health</h3>
-      <DataTable label="ZFS drives" columns={driveColumns} data={sorted} />
+      <DataTable label="ZFS drives" columns={columns} data={sorted} />
       <h3 className="section-heading">Datasets</h3>
       <DataTable label="ZFS datasets" columns={datasetColumns} data={z.datasets || []} />
       <p className="note">
-        Port = SATA. ↻ replacement. R/W/CRC = errors. ¹ Dataset totals share free space; raw
-        includes parity.
+        {mapped && "Slot = physical bay; — unmapped; * inferred. "}ATA = controller port. ↻
+        replacement. R/W/CRC = errors. ¹ Dataset totals share free space; raw includes parity.
       </p>
     </div>
   );

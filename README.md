@@ -267,3 +267,26 @@ mappings are documented directly in `nix/environment.nix`; `METRICS_PORT`
 defaults to 8099 and `METRICS_BIND` to loopback.
 
 MIT licensed.
+
+### Physical drive slots
+
+ATA controller ports and `/dev/sdX` names do not identify physical enclosure bays.
+Configure verified locations on the dashboard host, independently for each peer:
+
+```nix
+services.fleet-monitor.driveSlots = {
+  nas = {
+    "SERIAL123" = { slot = 2; };
+    "ata-Example_SERIAL456" = { slot = 7; inferred = true; };
+  };
+};
+```
+
+Keys match the exact serial shown under Drive ID, or the complete by-id basename
+without `-partN` (full IDs take precedence). The table sorts by physical slot,
+keeps a separate ATA column, and marks unconfigured drives `—`. Inferred locations
+have a visible `*`. No mapping means the table shows only ATA ports, as before.
+Two serials may share a slot during replacement; retain the old serial's mapping
+while its missing/replacing row remains. New unknown serials are never assigned a
+slot automatically. Hosts without Nix can set the same `driveSlots` object in
+`DASHBOARD_CONFIG` JSON. Slot metadata is display-only and never changes ZFS.

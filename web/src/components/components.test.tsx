@@ -245,7 +245,7 @@ describe("ZfsPanel", () => {
         .getAllByRole("columnheader")
         .slice(0, 5)
         .map((h) => h.textContent),
-    ).toEqual(["Port", "Device", "Drive ID", "↻", "State"]);
+    ).toEqual(["ATA", "Device", "Drive ID", "↻", "State"]);
     const replacement = screen.getByLabelText("Replacement drive");
     const row = replacement.closest("tr");
     expect(row).not.toBeNull();

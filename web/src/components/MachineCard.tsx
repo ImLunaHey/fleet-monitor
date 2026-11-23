@@ -1,4 +1,4 @@
-import type { Metrics, HistoryPoint } from "../types";
+import type { Metrics, HistoryPoint, DriveSlots } from "../types";
 import { bytes, colors, finite, fmt, gib } from "../format";
 import { HistoryChart } from "./HistoryChart";
 import { GpuPanel } from "./GpuPanel";
@@ -11,12 +11,14 @@ export function MachineCard({
   metrics: d,
   history,
   featured = false,
+  driveSlots,
   now,
 }: {
   name: string;
   metrics: Metrics;
   history?: HistoryPoint[];
   featured?: boolean;
+  driveSlots?: DriveSlots;
   now: number;
 }) {
   const gpuUnavailable = finite(d.gpu?.usage)
@@ -66,7 +68,7 @@ export function MachineCard({
       </div>
       <GpuPanel gpu={d.gpu} />
       {featured && d.zfs ? (
-        <ZfsPanel zfs={d.zfs} now={now} />
+        <ZfsPanel zfs={d.zfs} now={now} slots={driveSlots} />
       ) : (
         <div className="details">
           <StatRow label="Disk space" tone={pressure}>
