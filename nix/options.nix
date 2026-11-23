@@ -18,14 +18,14 @@ let inherit (lib) mkEnableOption mkOption types; in {
     hostOrder = mkOption { type = types.listOf types.str; default = [ ]; description = "Preferred host order; other configured hosts follow."; };
     compactHosts = mkOption { type = types.listOf types.str; default = [ ]; description = "Hosts shown in a compact footer instead of a card."; };
     driveSlots = mkOption {
-      type = types.attrsOf (types.attrsOf (types.submodule {
+      type = types.attrsOf (types.addCheck (types.attrsOf (types.submodule {
         options = {
           slot = mkOption { type = types.ints.positive; description = "Physical enclosure slot number."; };
           inferred = mkOption { type = types.bool; default = false; description = "Mark a slot inferred rather than physically confirmed."; };
         };
-      }));
+      })) (ports: lib.all (key: builtins.match "[1-9][0-9]*" key != null) (builtins.attrNames ports)));
       default = { };
-      description = "Per-host physical drive slots keyed by exact serial or full /dev/disk/by-id basename (without partition suffix). Full IDs take precedence. Never inferred from ATA ports or /dev/sdX names.";
+      description = "Per-host mapping from ATA controller port numbers (positive integer string keys) to physical enclosure slots. This describes enclosure wiring and survives drive replacement; serials and /dev/sdX names are not used.";
     };
     alertHosts = mkOption { type = types.listOf types.str; default = [ ]; description = "Hosts expected to stay online; alert when their telemetry disappears. Live machines also report hardware and service alerts."; };
     hideOfflineFooter = mkOption { type = types.bool; default = false; description = "Hide the footer and offline host list to reserve space for network telemetry."; };

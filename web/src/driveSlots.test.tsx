@@ -18,29 +18,31 @@ const pool = (drives: Drive[]): Zfs => ({
   drives,
 });
 describe("physical drive slots", () => {
-  it("matches stable serials and full IDs with explicit precedence", () => {
-    const slots = { SERIAL: { slot: 2 }, "ata-Example_SERIAL": { slot: 7 } };
-    expect(driveSlot(drive("SERIAL"), slots)?.slot).toBe(7);
-    expect(driveSlot({ ...drive("SERIAL"), path: undefined }, { SERIAL: { slot: 2 } })?.slot).toBe(
-      2,
-    );
-    expect(driveSlot(drive("OTHER"), slots)).toBeUndefined();
-    expect(driveSlot(drive("toString"), {})).toBeUndefined();
-    expect(
-      driveSlot({ name: "plain-id", state: "ONLINE" }, { "plain-id": { slot: 3 } })?.slot,
-    ).toBe(3);
+  it("maps the ATA port regardless of drive identity or device name", () => {
+    const slots = { "6": { slot: 2 } };
+    expect(driveSlot(drive("OLD"), slots)?.slot).toBe(2);
+    expect(driveSlot({ ...drive("NEW"), device: "sdz", path: undefined }, slots)?.slot).toBe(2);
+    expect(driveSlot(drive("OLD", 1), slots)).toBeUndefined();
+    expect(driveSlot(drive("OLD"), {})).toBeUndefined();
+    expect(driveSlot(drive("OLD"), { OLD: { slot: 7 } })).toBeUndefined();
   });
+  it.each([undefined, null, 0, -1, 1.5, NaN, Infinity])(
+    "keeps missing or invalid ATA port %s unknown",
+    (port) => {
+      expect(driveSlot({ ...drive("A"), port }, { "6": { slot: 2 } })).toBeUndefined();
+    },
+  );
   it.each([0, -1, 2.5, NaN, Infinity])(
     "rejects invalid slot %s from non-Nix configuration",
     (slot) => {
-      expect(driveSlot(drive("SERIAL"), { SERIAL: { slot } })).toBeUndefined();
+      expect(driveSlot(drive("SERIAL"), { "6": { slot } })).toBeUndefined();
     },
   );
   it("sorts physical slots, preserves ATA ports, and distinguishes unknown and inferred slots", () => {
     render(
       <ZfsPanel
         now={now}
-        slots={{ A: { slot: 2 }, B: { slot: 6, inferred: true } }}
+        slots={{ "6": { slot: 2 }, "2": { slot: 6, inferred: true } }}
         zfs={pool([drive("B", 2), drive("UNKNOWN", 1), drive("A", 6)])}
       />,
     );
@@ -67,15 +69,15 @@ describe("physical drive slots", () => {
       "6*",
     );
   });
-  it("keeps both sides of a replacement in the same slot without assigning unknown drives", () => {
+  it("keeps replacement drives in the same physical slot without adding their serials", () => {
     render(
       <ZfsPanel
         now={now}
-        slots={{ OLD: { slot: 5 }, NEW: { slot: 5 } }}
+        slots={{ "3": { slot: 5 } }}
         zfs={pool([
           drive("NEW", 3),
           { ...drive("OLD", 3), missing: 1, state: "CANT_OPEN" },
-          drive("UNKNOWN", 3),
+          drive("UNKNOWN", 4),
         ])}
       />,
     );
@@ -92,7 +94,7 @@ describe("physical drive slots", () => {
         fleet={{ lake: { online: true, metrics: { ...metrics(), zfs: pool([drive("A")]) } } }}
         config={{
           featuredHost: "lake",
-          driveSlots: { lake: { A: { slot: 2 } }, other: { A: { slot: 9 } } },
+          driveSlots: { lake: { "6": { slot: 2 } }, other: { "6": { slot: 9 } } },
         }}
       />,
     );
