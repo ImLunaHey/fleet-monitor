@@ -16,6 +16,14 @@ let inherit (lib) mkEnableOption mkOption types; in {
     featuredHost = mkOption { type = types.nullOr types.str; default = null; description = "Host shown in the full-height right column (usually the ZFS host)."; };
     hostOrder = mkOption { type = types.listOf types.str; default = [ ]; description = "Preferred host order; other configured hosts follow."; };
     compactHosts = mkOption { type = types.listOf types.str; default = [ ]; description = "Hosts shown in a compact footer instead of a card."; };
+    hideOfflineFooter = mkOption { type = types.bool; default = false; description = "Hide the footer and offline host list to reserve space for network telemetry."; };
+    unifi = {
+      enable = mkEnableOption "read-only UniFi Network telemetry";
+      url = mkOption { type = types.str; default = ""; description = "HTTPS Integration API base URL, including /proxy/network/integration/v1 on UniFi OS."; };
+      siteId = mkOption { type = types.str; default = ""; description = "UniFi site UUID."; };
+      apiKeyFile = mkOption { type = types.str; default = ""; description = "Runtime path to the API key; never put its contents in the Nix store. NixOS loads it as a systemd credential."; };
+      certificateSha256 = mkOption { type = types.str; default = ""; description = "Optional SHA256 certificate pin for a local self-signed controller. Empty uses normal TLS verification."; };
+    };
     intelGPU = mkEnableOption "Intel i915 performance counters (CAP_PERFMON on Linux)";
     amdGpuName = mkOption { type = types.nullOr types.str; default = null; description = "Enable AMD sysfs telemetry and override its display name."; };
     zfsPool = mkOption { type = types.nullOr types.str; default = null; description = "Optional ZFS pool to monitor."; };

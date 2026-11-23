@@ -1,4 +1,5 @@
-import type { Fleet, FleetConfig, Histories } from "./types";
+import { NetworkStrip } from "./components/NetworkStrip";
+import type { Fleet, FleetConfig, Histories, UnifiSnapshot } from "./types";
 import { useEffect, useState } from "react";
 import { useFleet } from "./fleet";
 import { online, bytes, fmt } from "./format";
@@ -9,12 +10,16 @@ export function Dashboard({
   histories = {},
   error = false,
   now,
+  network,
+  networkError = false,
 }: {
   fleet: Fleet;
   config?: FleetConfig;
   histories?: Histories;
   error?: boolean;
   now: number;
+  network?: UnifiSnapshot;
+  networkError?: boolean;
 }) {
   const order = [...new Set([...(config.order || []), ...Object.keys(fleet)])].filter(
     (name) => fleet[name],
@@ -25,14 +30,18 @@ export function Dashboard({
   const regular = live.filter((name) => name !== featured && !compact.has(name));
   const offline = order.filter((name) => !online(fleet[name], now) && !compact.has(name));
   return (
-    <main>
+    <main className={config.networkEnabled ? "network-layout" : undefined}>
       <header>
         <div>
           <div className="eyebrow">{config.title || "Fleet Monitor"} / live system overview</div>
-          <h1>Machines</h1>
+          {!config.networkEnabled && <h1>Machines</h1>}
         </div>
-        <div className="clock">{new Date(now * 1000).toLocaleString("en-GB")}</div>
+        <div className="clock">
+          {error && <span className="warn">Telemetry connection lost · </span>}
+          {new Date(now * 1000).toLocaleString("en-GB")}
+        </div>
       </header>
+      {config.networkEnabled && <NetworkStrip data={network} now={now} error={networkError} />}
       <div className="wall" style={!featured ? { gridTemplateColumns: "1fr" } : undefined}>
         <section className="machines" aria-label="Machines">
           {regular.map((name) => {
@@ -62,29 +71,33 @@ export function Dashboard({
           </section>
         )}
       </div>
-      <div className="bottomline">
-        <div className="offline-hosts">
-          {offline.map((name) => (
-            <span key={name}>{name}</span>
-          ))}
+      {!config.hideOfflineFooter && (
+        <div className="bottomline">
+          <div className="offline-hosts">
+            {offline.map((name) => (
+              <span key={name}>{name}</span>
+            ))}
+          </div>
+          {[...compact].map((name) => {
+            const host = fleet[name];
+            const isOnline = online(host, now);
+            const d = isOnline ? host.metrics : undefined;
+            return (
+              <span key={name} className={`compact-status ${isOnline ? "online" : ""}`}>
+                {d
+                  ? `● ${name} online · CPU ${fmt(d.cpu.usage, 1)}% · RAM ${bytes(d.memory.used)} / ${bytes(d.memory.total)} · Disk ${bytes(d.disk.used)} / ${bytes(d.disk.total)}`
+                  : `${name} · offline`}
+              </span>
+            );
+          })}
+          <span>
+            {error
+              ? "Telemetry connection lost"
+              : `${live.length} / ${order.length} machines online`}
+          </span>
+          <span>Live · refreshes automatically</span>
         </div>
-        {[...compact].map((name) => {
-          const host = fleet[name];
-          const isOnline = online(host, now);
-          const d = isOnline ? host.metrics : undefined;
-          return (
-            <span key={name} className={`compact-status ${isOnline ? "online" : ""}`}>
-              {d
-                ? `● ${name} online · CPU ${fmt(d.cpu.usage, 1)}% · RAM ${bytes(d.memory.used)} / ${bytes(d.memory.total)} · Disk ${bytes(d.disk.used)} / ${bytes(d.disk.total)}`
-                : `${name} · offline`}
-            </span>
-          );
-        })}
-        <span>
-          {error ? "Telemetry connection lost" : `${live.length} / ${order.length} machines online`}
-        </span>
-        <span>Live · refreshes automatically</span>
-      </div>
+      )}
     </main>
   );
 }

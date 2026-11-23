@@ -160,3 +160,31 @@ describe("dashboard lifecycle", () => {
     expect(screen.getByText("nas")).toBeInTheDocument();
   });
 });
+it("polls UniFi only when enabled and exposes request failures", async () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  });
+  client.setQueryData(["config"], { networkEnabled: true });
+  let failed = false;
+  const fetch = vi.fn<(url: string) => Promise<Response>>(
+    async (url: string) =>
+      new Response(
+        JSON.stringify(
+          url === "/api/network"
+            ? { available: true, timestamp: now, devices: [], clients: 19 }
+            : {},
+        ),
+        { status: failed && url === "/api/network" ? 503 : 200 },
+      ),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const { result, unmount } = renderHook(useFleet, { wrapper: wrapperFor(client) });
+  await waitFor(() => expect(result.current.network?.clients).toBe(19));
+  failed = true;
+  await act(async () => {
+    await client.refetchQueries({ queryKey: ["network"] });
+  });
+  await waitFor(() => expect(result.current.networkError).toBe(true));
+  unmount();
+  client.clear();
+});

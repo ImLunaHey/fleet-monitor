@@ -569,3 +569,173 @@ h3 {
 .replacement {
   color: #b9a2e8;
 }
+
+main.network-layout {
+  gap: 16px;
+}
+.network-layout header {
+  height: 36px;
+  min-height: 36px;
+  align-items: center;
+}
+.network-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  flex-shrink: 0;
+  height: 136px;
+}
+.network-card {
+  padding: 12px 20px;
+  background: var(--panel);
+  border: 1px solid #ffffff08;
+  border-radius: 16px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.network-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.network-title h2 {
+  font-size: 21px;
+  letter-spacing: -0.3px;
+}
+.network-title .net-online {
+  font-size: 15px;
+}
+.gateway-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gateway-metrics > div,
+.switch-count,
+.wifi-count {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.network-card b {
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 29px;
+}
+.network-card small {
+  font-size: 16px;
+  color: var(--muted);
+}
+.gateway-metrics span,
+.switch-count span,
+.wifi-count span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.network-foot {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.switch-body,
+.wifi-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.switch-count {
+  flex-shrink: 0;
+}
+.port-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  flex: 1;
+}
+.port-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--inset);
+  border-radius: 5px;
+  padding: 3px 0;
+  min-width: 0;
+}
+.port-cell span {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.port-cell b {
+  font-size: 14px;
+  line-height: 18px;
+}
+.port-fast b {
+  color: var(--purple);
+}
+.port-normal b {
+  color: var(--blue);
+}
+.port-slow b {
+  color: var(--orange);
+}
+.port-down b {
+  color: var(--muted);
+}
+.radio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  flex: 1;
+}
+.radio {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  gap: 1px;
+}
+.radio b {
+  font-size: 20px;
+  line-height: 24px;
+}
+.radio span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.radio i {
+  display: none;
+}
+.network-layout .featured-host .machine {
+  grid-template-rows: 48px 82px 160px 58px minmax(0, 1fr) 0 22px;
+  row-gap: 8px;
+}
+.network-layout .featured-host .health-line[data-id="services"] {
+  display: none;
+}
+.network-layout header .eyebrow {
+  margin: 0;
+}
+.network-layout header .clock {
+  font-size: 16px;
+}
+.network-unavailable {
+  grid-template-columns: 1fr;
+}
+.port-grid {
+  grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
+}
+.network-card {
+  overflow: hidden;
+}
+.net-online {
+  color: #90d6a5;
+  font-weight: 400;
+}
+.poe-mark {
+  color: var(--orange);
+}

@@ -139,6 +139,47 @@ only configured peers. Reads use GET; other methods are rejected.
 
 ## Development
 
+### UniFi Network
+
+The dashboard can show a shallow gateway, switch-port, and access-point strip
+above the existing host cards. Enable it on the dashboard host:
+
+```nix
+services.fleet-monitor = {
+  mode = "dashboard";
+  hideOfflineFooter = true;
+  unifi = {
+    enable = true;
+    url = "https://controller.example/proxy/network/integration/v1";
+    siteId = "your-site-uuid";
+    apiKeyFile = "/var/lib/fleet-monitor-secrets/unifi-api-key";
+    # Optional SHA256 leaf-certificate pin for a self-signed controller:
+    # certificateSha256 = "64 hexadecimal characters";
+  };
+};
+```
+
+Provision the key separately as a root-readable runtime file; never embed it
+in a Nix expression or commit it. On NixOS, systemd `LoadCredential` makes it
+available to the collector without giving its HTTP process root access. On
+macOS, the configured agent user must be able to read the file. Normal TLS
+verification is the default; an explicit certificate pin is verified before
+any API credential is sent. Redirects are never followed.
+
+The Go backend polls the official Integration API with GET requests every ten
+seconds, with bounded timeouts and paginated inventory reads. `/api/network`
+exposes normalized readings, not the controller key, client identities, MACs,
+or IP addresses. Only device names/IDs and aggregate client counts are retained.
+The strip shows device status, CPU/RAM, uptime, negotiated port speeds, active
+PoE state, and radio channels/widths/retries. It does not infer WAN throughput,
+PoE wattage, or RF signal strength. Controller failures and stale device
+heartbeats suppress healthy indicators and current readings.
+
+The compact layout targets an ultrawide monitor with a small device inventory
+(the gateway, switch and AP arrangement); large sites need a tailored layout.
+
+### Checks
+
 ```sh
 nix develop
 (cd collector && go test ./... && go vet ./...)

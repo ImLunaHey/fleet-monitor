@@ -1,4 +1,4 @@
-import type { Fleet, FleetConfig, Histories } from "./types";
+import type { Fleet, FleetConfig, Histories, UnifiSnapshot } from "./types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 export async function fetchJSON<T>(path: string, signal: AbortSignal): Promise<T> {
   const combined = AbortSignal.any([signal, AbortSignal.timeout(3500)]);
@@ -46,7 +46,18 @@ export function useFleet() {
     staleTime: Infinity,
     retry: false,
   });
+  const network = useQuery({
+    queryKey: ["network"],
+    queryFn: ({ signal }) => fetchJSON<UnifiSnapshot>("/api/network", signal),
+    enabled: config.data?.networkEnabled === true,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
   return {
+    network: network.data,
+    networkError: network.isError,
     fleet: fleet.data?.hosts || {},
     config: config.data || {},
     histories: fleet.data?.histories || {},

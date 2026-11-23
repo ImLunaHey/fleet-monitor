@@ -91,6 +91,8 @@ export interface Host {
 }
 export type Fleet = Record<string, Host>;
 export interface FleetConfig {
+  hideOfflineFooter?: boolean;
+  networkEnabled?: boolean;
   title?: string;
   order?: string[];
   featuredHost?: string;
@@ -104,3 +106,37 @@ export interface HistoryPoint {
   tx?: Reading;
 }
 export type Histories = Record<string, HistoryPoint[]>;
+export interface UnifiPort {
+  idx: number;
+  state: string;
+  connector: string;
+  speedMbps?: number | null;
+  poe?: { state: string };
+}
+export interface UnifiRadio {
+  frequencyGHz: number;
+  channel: number | null;
+  channelWidthMHz: number | null;
+  txRetriesPct: number | null;
+}
+export interface UnifiDevice {
+  id: string;
+  name: string;
+  kind: string;
+  state: string;
+  timestamp: number;
+  cpu: Reading;
+  memory: Reading;
+  uptime: Reading;
+  ports: UnifiPort[] | null;
+  radios: UnifiRadio[] | null;
+  clients: number;
+}
+export interface UnifiSnapshot {
+  available: boolean;
+  timestamp: number;
+  devices: UnifiDevice[] | null;
+  wired: number;
+  wireless: number;
+  clients: number;
+}

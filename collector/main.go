@@ -438,6 +438,9 @@ func main() {
 		go pollPeer(name, url)
 	}
 	page, _ := os.ReadFile(os.Getenv("DASHBOARD_HTML"))
+	if len(page) > 0 && os.Getenv("UNIFI_URL") != "" {
+		go unifiLoop()
+	}
 	dashboardConfig := M{}
 	_ = json.Unmarshal([]byte(env("DASHBOARD_CONFIG", "{}")), &dashboardConfig)
 	allowed := map[string]bool{}
@@ -468,6 +471,8 @@ func main() {
 			return
 		case r.URL.Path == "/api/config" && len(page) > 0:
 			data = dashboardConfig
+		case r.URL.Path == "/api/network" && len(page) > 0:
+			data = networkData
 		case r.URL.Path == "/api/metrics":
 			data = snapshot
 		case r.URL.Path == "/api/fleet" && len(page) > 0:

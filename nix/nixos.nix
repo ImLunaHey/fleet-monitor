@@ -22,6 +22,7 @@ in {
   };
   config = lib.mkIf cfg.enable (lib.mkMerge [ {
     assertions = [
+      { assertion = !cfg.unifi.enable || (cfg.mode == "dashboard" && cfg.unifi.url != "" && cfg.unifi.siteId != "" && cfg.unifi.apiKeyFile != ""); message = "UniFi requires dashboard mode, URL, siteId and apiKeyFile."; }
       { assertion = cfg.allowedClients != [ ]; message = "fleet-monitor.allowedClients must list permitted source addresses."; }
       { assertion = !cfg.kiosk.enable || cfg.mode == "dashboard"; message = "fleet-monitor kiosk requires dashboard mode."; }
     ];
@@ -31,8 +32,9 @@ in {
       wantedBy = [ "multi-user.target" ]; after = [ "network-online.target" ]; wants = [ "network-online.target" ];
       environment = (import ./environment.nix { inherit cfg lib pkgs; }) // lib.optionalAttrs cfg.intelGPU {
         METRICS_INTEL_MEMORY_FILE = "/run/fleet-monitor-intel/memory.json";
-      };
+      } // lib.optionalAttrs cfg.unifi.enable { UNIFI_API_KEY_FILE = "%d/unifi-api-key"; };
       serviceConfig = {
+        LoadCredential = lib.optionals cfg.unifi.enable [ "unifi-api-key:${cfg.unifi.apiKeyFile}" ];
         ExecStart = lib.getExe cfg.package; DynamicUser = true; Restart = "always"; RestartSec = "5s";
         NoNewPrivileges = true; ProtectSystem = "strict"; ProtectHome = true; PrivateTmp = true;
         AmbientCapabilities = lib.optionals cfg.intelGPU [ "CAP_PERFMON" ];
