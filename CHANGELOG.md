@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/ImLunaHey/fleet-monitor/compare/v0.3.0...v0.4.0) (2026-11-23)
+
+
+### Features
+
+* **dashboard:** retain offline machine cards and simplify drive columns ([ba55a08](https://github.com/ImLunaHey/fleet-monitor/commit/ba55a08add5d067292d03360638cc727f317e65c))
+
 ## [0.3.0](https://github.com/ImLunaHey/fleet-monitor/compare/v0.2.2...v0.3.0) (2026-11-23)
 
 
