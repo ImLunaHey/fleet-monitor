@@ -1,10 +1,10 @@
 {
-  "version": "v0.2.0",
+  "version": "v0.2.1",
   "assets": {
     "fleet-monitor-dashboard.html": "sha256-h0qRiIeTBwnDi5/gF++V+9oLRx3ngS0dlC5XS1C22fc=",
-    "fleet-monitor-x86_64-linux": "sha256-IxbpgOaEIhshyQ+al4iq6opBo0bsSggGrlqcehrxx0g=",
-    "fleet-monitor-aarch64-linux": "sha256-3t5WvstiwawswHH+oe+hiS4onITTSv3+vlCVUV6gsyQ=",
-    "fleet-monitor-x86_64-darwin": "sha256-aOrVysJrF1jPp92eeaGsDf2fpXdMA4p0MTF+XncWx/o=",
-    "fleet-monitor-aarch64-darwin": "sha256-/inJ1idJqU5STYMVJyxw24PFHyntmP8LbCRAPOdHKtc="
+    "fleet-monitor-x86_64-linux": "sha256-pKlMVTSTdqDh7WgUXgifR+rBjdGi3nxEY3a31Ie9jCU=",
+    "fleet-monitor-aarch64-linux": "sha256-YpzJuURBvvbtO/gXXQnzLjIqP+V7lnBwc1uXChy6KsM=",
+    "fleet-monitor-x86_64-darwin": "sha256-+EvviK3uEK5MIq/Rx3Vf+sPd4f2xxZSGUGZA5VCBKyU=",
+    "fleet-monitor-aarch64-darwin": "sha256-w8s37vz/xFyNGsVGnY2o7OeQ8X3VppEoBl4WaHj0S2s="
   }
 }

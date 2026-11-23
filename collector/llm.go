@@ -12,19 +12,21 @@ import (
 )
 
 type llmMetrics struct {
-	Available       bool     `json:"available"`
-	Timestamp       int64    `json:"timestamp"`
-	Model           string   `json:"model"`
-	Active          *float64 `json:"active"`
-	Queued          *float64 `json:"queued"`
-	TokensPerSecond *float64 `json:"tokensPerSecond"`
+	Available        bool     `json:"available"`
+	Timestamp        int64    `json:"timestamp"`
+	Model            string   `json:"model"`
+	Active           *float64 `json:"active"`
+	Queued           *float64 `json:"queued"`
+	TokensPerSecond  *float64 `json:"tokensPerSecond"`
+	PredictedTotal   *float64 `json:"-"`
+	PredictedSeconds *float64 `json:"-"`
 }
 
 var llmSnapshot *llmMetrics
 
 func parseLlamaMetrics(text string) (llmMetrics, error) {
 	out := llmMetrics{}
-	fields := map[string]**float64{"llamacpp:requests_processing": &out.Active, "llamacpp:requests_deferred": &out.Queued, "llamacpp:predicted_tokens_seconds": &out.TokensPerSecond}
+	fields := map[string]**float64{"llamacpp:requests_processing": &out.Active, "llamacpp:requests_deferred": &out.Queued, "llamacpp:predicted_tokens_seconds": &out.TokensPerSecond, "llamacpp:tokens_predicted_total": &out.PredictedTotal, "llamacpp:tokens_predicted_seconds_total": &out.PredictedSeconds}
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {
 		parts := strings.Fields(scanner.Text())
@@ -84,13 +86,40 @@ func collectLlama(ctx context.Context, base string) (llmMetrics, error) {
 	out.Available = true
 	return out, nil
 }
+
+// The instantaneous gauge resets between requests. Derive interval decode
+// throughput from cumulative counters and retain it while idle. Counter resets,
+// model changes and collection failures must not carry an older model's speed.
+func llamaThroughput(data *llmMetrics, previous *llmMetrics) {
+	continuous := previous != nil && previous.Available && previous.Model == data.Model && data.PredictedTotal != nil && data.PredictedSeconds != nil && previous.PredictedTotal != nil && previous.PredictedSeconds != nil && *data.PredictedTotal >= *previous.PredictedTotal && *data.PredictedSeconds >= *previous.PredictedSeconds
+	if continuous {
+		tokens := *data.PredictedTotal - *previous.PredictedTotal
+		seconds := *data.PredictedSeconds - *previous.PredictedSeconds
+		if tokens > 0 && seconds > 0 {
+			rate := tokens / seconds
+			data.TokensPerSecond = &rate
+			return
+		}
+	}
+	if data.Active != nil && *data.Active == 0 && (data.TokensPerSecond == nil || *data.TokensPerSecond == 0) {
+		data.TokensPerSecond = nil
+		if continuous {
+			data.TokensPerSecond = previous.TokensPerSecond
+		}
+	}
+}
 func llmLoop(base string) {
+	var previous *llmMetrics
 	for {
 		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 		data, e := collectLlama(ctx, base)
 		cancel()
 		if e != nil {
 			data = llmMetrics{Available: false}
+			previous = nil
+		} else {
+			llamaThroughput(&data, previous)
+			previous = &data
 		}
 		mu.Lock()
 		llmSnapshot = &data

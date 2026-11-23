@@ -119,3 +119,54 @@ func TestUnifiSupplementalTelemetry(t *testing.T) {
 		t.Fatal("failed request reused old data")
 	}
 }
+
+func TestLlamaThroughputSurvivesIdleAndResetsSafely(t *testing.T) {
+	number := func(n float64) *float64 { return &n }
+	sample := func(tokens, seconds, active float64) llmMetrics {
+		return llmMetrics{Available: true, Model: "model", Active: number(active), TokensPerSecond: number(0), PredictedTotal: number(tokens), PredictedSeconds: number(seconds)}
+	}
+	initial := sample(0, 0, 0)
+	llamaThroughput(&initial, nil)
+	if initial.TokensPerSecond != nil {
+		t.Fatal("invented initial speed")
+	}
+	generated := sample(32, .5, 0)
+	llamaThroughput(&generated, &initial)
+	if *generated.TokensPerSecond != 64 {
+		t.Fatal("incorrect decode throughput")
+	}
+	idle := sample(32, .5, 0)
+	llamaThroughput(&idle, &generated)
+	if *idle.TokensPerSecond != 64 {
+		t.Fatal("idle poll erased last speed")
+	}
+	for _, mode := range []string{"restart", "model", "failure", "missing"} {
+		t.Run(mode, func(t *testing.T) {
+			next := sample(32, .5, 0)
+			prior := idle
+			switch mode {
+			case "restart":
+				next = sample(0, 0, 0)
+			case "model":
+				next.Model = "another"
+			case "failure":
+				prior.Available = false
+			case "missing":
+				next.PredictedTotal = nil
+			}
+			llamaThroughput(&next, &prior)
+			if next.TokensPerSecond != nil {
+				t.Fatal("stale speed survived reset")
+			}
+		})
+	}
+	active := sample(32, .5, 1)
+	llamaThroughput(&active, &idle)
+	if *active.TokensPerSecond != 0 {
+		t.Fatal("reported previous speed as current prefill rate")
+	}
+	b, _ := json.Marshal(generated)
+	if strings.Contains(string(b), "PredictedTotal") || strings.Contains(string(b), "PredictedSeconds") {
+		t.Fatal("internal counters exposed")
+	}
+}
