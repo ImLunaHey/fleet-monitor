@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/ImLunaHey/fleet-monitor/compare/v0.4.0...v0.5.0) (2026-11-25)
+
+
+### Features
+
+* **dashboard:** add LAN QR access and responsive touch layouts ([#4](https://github.com/ImLunaHey/fleet-monitor/issues/4)) ([d42ece3](https://github.com/ImLunaHey/fleet-monitor/commit/d42ece3bf09326a62b5fe11b9ea4de68f7c713a3))
+* **telemetry:** show passive process rankings and ZFS ARC memory ([#6](https://github.com/ImLunaHey/fleet-monitor/issues/6)) ([d130a02](https://github.com/ImLunaHey/fleet-monitor/commit/d130a02952e7464302ba69c581bdcecd426d11c5))
+
 ## [0.4.0](https://github.com/ImLunaHey/fleet-monitor/compare/v0.3.0...v0.4.0) (2026-11-23)
 
 
