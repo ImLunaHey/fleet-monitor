@@ -1,6 +1,5 @@
 // Run after the dashboard build. Uses an isolated headless browser, no server.
 import {spawn} from 'node:child_process';
-import {once} from 'node:events';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -10,7 +9,8 @@ import {layoutFixture} from './layout-fixture.mjs';
 const root=fileURLToPath(new URL('..',import.meta.url));
 const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'fleet-layout-'));
 const chrome=spawn(process.env.CHROME_PATH || (process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':'google-chrome'),['--headless','--disable-gpu','--no-sandbox','--remote-debugging-port=0','--no-first-run','--user-data-dir='+temporary,'about:blank']);
-const exited=once(chrome,'exit');
+// `close` also waits for stdio held by Chrome's children to close.
+const closed=new Promise(resolve=>chrome.once('close',resolve));
 let socket;
 const timer=setTimeout(()=>{chrome.kill();console.error('Layout check timed out');process.exitCode=1},45000);
 try {
@@ -39,4 +39,15 @@ try {
   if(width>=2560){assert.ok(report.height<=height,'kiosk requires vertical scrolling');for(const z of report.zfs)assert.ok(z.content<=z.visible,'kiosk ZFS content requires scrolling');for(const t of report.tables)assert.ok(t.content<=t.visible,'kiosk table requires horizontal scrolling')}
  }
  await send('Browser.close');
-} finally {clearTimeout(timer);socket?.close();chrome.kill();await exited;fs.rmSync(temporary,{recursive:true,force:true,maxRetries:10,retryDelay:100})}
+ // The protocol reply only acknowledges shutdown. Let Chrome flush its profile
+ // and stop its children before removing it; killing it here races those writes.
+ await closed;
+} finally {
+ clearTimeout(timer);
+ socket?.close();
+ // Only terminate a browser left running by an assertion/startup failure.
+ if(chrome.exitCode===null&&chrome.signalCode===null)chrome.kill();
+ const forceStop=setTimeout(()=>chrome.kill('SIGKILL'),5000);
+ try {await closed} finally {clearTimeout(forceStop)}
+ await fs.promises.rm(temporary,{recursive:true,force:true,maxRetries:10,retryDelay:100});
+}
