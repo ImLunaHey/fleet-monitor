@@ -1383,7 +1383,8 @@ header:has(.dashboard-access) {
     margin-left: 0;
   }
 }
-@media (min-width: 2401px) and (min-height: 801px) and (pointer: fine) {
+/* A passive kiosk may have no pointer at all. */
+@media (min-width: 2401px) and (min-height: 801px) and (not (pointer: coarse)) {
   .compact-zfs .zfs-table td {
     padding: 4px;
   }
