@@ -6,6 +6,8 @@ address=${2:?private bind address}
 interface=${3:?network interface}
 binary=${4:?built fleet-monitor binary}
 clients=${5:-127.0.0.1,::1}
+processes=${METRICS_PROCESSES:-0}
+[[ "$processes" == 0 || "$processes" == 1 ]] || { echo "METRICS_PROCESSES must be 0 or 1" >&2; exit 1; }
 mkdir -p "$HOME/.local/bin" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
 install -m 0755 "$binary" "$HOME/.local/bin/fleet-monitor"
 plist="$HOME/Library/LaunchAgents/org.fleet-monitor.agent.plist"
@@ -19,6 +21,7 @@ plutil -insert EnvironmentVariables.METRICS_NAME -string "$name" "$plist"
 plutil -insert EnvironmentVariables.METRICS_BIND -string "$address" "$plist"
 plutil -insert EnvironmentVariables.METRICS_INTERFACE -string "$interface" "$plist"
 plutil -insert EnvironmentVariables.METRICS_ALLOWED_CLIENTS -string "$clients" "$plist"
+plutil -insert EnvironmentVariables.METRICS_PROCESSES -string "$processes" "$plist"
 plutil -insert RunAtLoad -bool YES "$plist"
 plutil -insert KeepAlive -bool YES "$plist"
 plutil -insert ThrottleInterval -integer 5 "$plist"

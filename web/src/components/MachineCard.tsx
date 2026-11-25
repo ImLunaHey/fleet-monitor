@@ -1,3 +1,4 @@
+import { ProcessPanel } from "./ProcessPanel";
 import type { Metrics, HistoryPoint, DriveSlots } from "../types";
 import { bytes, colors, finite, fmt, gib } from "../format";
 import { HistoryChart } from "./HistoryChart";
@@ -31,8 +32,31 @@ export function MachineCard({
   const services = Object.entries(d.services || {})
     .map(([label, healthy]) => `${label} ${healthy ? "online" : "unavailable"}`)
     .join(" · ");
+  const details = (
+    <div className="details">
+      <StatRow label="Disk space" tone={pressure}>
+        {bytes(d.disk.free)} free · {fmt(d.disk.percent)}% used
+      </StatRow>
+      <Meter
+        label="Disk used"
+        value={d.disk.percent}
+        color={pressure === "bad" ? colors.red : pressure === "warn" ? colors.amber : colors.blue}
+      />
+      <StatRow label="Disk read / write">
+        {finite(d.disk.read) && finite(d.disk.write)
+          ? `${bytes(d.disk.read)}/s · ${bytes(d.disk.write)}/s`
+          : "Reading unavailable"}
+      </StatRow>
+      <StatRow label="Disk IOPS">
+        {finite(d.disk.iops) ? `${fmt(d.disk.iops, 1)} operations/s` : "Reading unavailable"}
+      </StatRow>
+    </div>
+  );
   return (
-    <article className="machine" aria-label={`${name} machine`}>
+    <article
+      className={`machine${d.processes !== undefined ? " with-processes" : ""}`}
+      aria-label={`${name} machine`}
+    >
       <div className="head">
         <div>
           <h2>{name}</h2>
@@ -66,30 +90,23 @@ export function MachineCard({
         <HistoryChart now={now} kind="gpu" history={history} unavailable={gpuUnavailable} />
         <HistoryChart now={now} kind="network" history={history} network={d.network} />
       </div>
-      <GpuPanel gpu={d.gpu} />
+      {d.processes !== undefined && featured ? (
+        <div className="gpu-process-summary">
+          <GpuPanel gpu={d.gpu} />
+          <ProcessPanel metrics={d} now={now} />
+        </div>
+      ) : (
+        <GpuPanel gpu={d.gpu} />
+      )}
       {featured && d.zfs ? (
         <ZfsPanel zfs={d.zfs} now={now} slots={driveSlots} />
-      ) : (
-        <div className="details">
-          <StatRow label="Disk space" tone={pressure}>
-            {bytes(d.disk.free)} free · {fmt(d.disk.percent)}% used
-          </StatRow>
-          <Meter
-            label="Disk used"
-            value={d.disk.percent}
-            color={
-              pressure === "bad" ? colors.red : pressure === "warn" ? colors.amber : colors.blue
-            }
-          />
-          <StatRow label="Disk read / write">
-            {finite(d.disk.read) && finite(d.disk.write)
-              ? `${bytes(d.disk.read)}/s · ${bytes(d.disk.write)}/s`
-              : "Reading unavailable"}
-          </StatRow>
-          <StatRow label="Disk IOPS">
-            {finite(d.disk.iops) ? `${fmt(d.disk.iops, 1)} operations/s` : "Reading unavailable"}
-          </StatRow>
+      ) : d.processes !== undefined && !featured ? (
+        <div className="process-details">
+          {details}
+          <ProcessPanel metrics={d} now={now} />
         </div>
+      ) : (
+        details
       )}
       <div className="health-line" data-id="services">
         {d.llm ? (

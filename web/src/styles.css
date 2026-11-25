@@ -1383,7 +1383,8 @@ header:has(.dashboard-access) {
     margin-left: 0;
   }
 }
-@media (min-width: 2401px) and (min-height: 801px) and (pointer: fine) {
+/* A passive kiosk may have no pointer at all. */
+@media (min-width: 2401px) and (min-height: 801px) and (not (pointer: coarse)) {
   .compact-zfs .zfs-table td {
     padding: 4px;
   }
@@ -1393,5 +1394,195 @@ header:has(.dashboard-access) {
   .compact-zfs .section-heading {
     margin-top: 6px;
     padding-top: 6px;
+  }
+}
+
+/* Both rankings are always visible: a kiosk needs no tabs, hover, or input. */
+.processes-panel {
+  grid-row: 5;
+  min-width: 0;
+}
+.process-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.process-list {
+  min-width: 0;
+}
+.process-list h3 {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.process-list ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.process-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.process-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.process-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.process-identity small {
+  color: var(--muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.process-list strong {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.process-memory strong {
+  color: var(--purple);
+}
+.process-cpu strong {
+  color: var(--blue);
+}
+.process-memory-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+  line-height: 18px;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.process-memory-context strong {
+  color: #ddd;
+  font-weight: 400;
+}
+.process-empty,
+.process-unavailable {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.machine.with-processes {
+  grid-template-rows: 50px 68px minmax(140px, 1fr) 50px 112px 22px 22px;
+  gap: 8px;
+  padding: 16px;
+}
+.machine.with-processes h2 {
+  font-size: 28px;
+  line-height: 32px;
+}
+.machine.with-processes .subtitle {
+  font-size: 14px;
+  line-height: 18px;
+}
+.machine.with-processes .tile {
+  padding: 8px 12px;
+}
+.machine.with-processes .value {
+  font-size: 28px;
+  line-height: 32px;
+}
+.machine.with-processes .gpu-panel {
+  gap: 4px;
+}
+.machine.with-processes .gpu-panel .row,
+.machine.with-processes .gpu-panel .health-line {
+  font-size: 14px;
+  line-height: 18px;
+}
+.machine.with-processes .chart-box {
+  padding: 10px;
+  gap: 6px;
+  grid-template-rows: 18px minmax(0, 1fr) 18px;
+}
+.machine.with-processes .legend {
+  font-size: 14px;
+  line-height: 18px;
+}
+.process-details {
+  grid-row: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+  gap: 18px;
+  min-width: 0;
+}
+.process-details > .details,
+.process-details > .processes-panel {
+  grid-row: auto;
+}
+.process-details .row {
+  font-size: 14px;
+  line-height: 20px;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+.process-details > .details {
+  justify-content: flex-start;
+  gap: 4px;
+}
+.gpu-process-summary {
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+  gap: 18px;
+  min-width: 0;
+}
+.gpu-process-summary > .gpu-panel,
+.gpu-process-summary > .processes-panel {
+  grid-row: auto;
+}
+.gpu-process-summary .row {
+  flex-wrap: wrap;
+}
+.featured-host .machine.with-processes,
+.network-layout .featured-host .machine.with-processes {
+  grid-template-rows: 50px 68px 140px 112px minmax(0, 1fr) 0 22px;
+}
+@media (max-width: 2400px), (pointer: coarse), (max-height: 800px) {
+  .machine.with-processes,
+  .featured-host .machine.with-processes,
+  .network-layout .featured-host .machine.with-processes {
+    grid-template-rows: auto auto 170px auto auto auto auto;
+    gap: 14px;
+  }
+  .process-details,
+  .gpu-process-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .process-list li {
+    font-size: 15px;
+    line-height: 24px;
+  }
+}
+@media (max-width: 1100px) {
+  .machine.with-processes,
+  .featured-host .machine.with-processes,
+  .network-layout .featured-host .machine.with-processes {
+    grid-template-rows: auto auto 300px auto auto auto auto;
+  }
+}
+@media (max-width: 700px) {
+  .machine.with-processes,
+  .featured-host .machine.with-processes,
+  .network-layout .featured-host .machine.with-processes {
+    grid-template-rows: auto auto 510px auto auto auto auto;
+  }
+  .process-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 }

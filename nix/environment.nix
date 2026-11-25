@@ -1,6 +1,7 @@
 { cfg, lib, pkgs }:
 {
   METRICS_NAME = cfg.name;
+  METRICS_PROCESSES = if cfg.processes.enable then "1" else "0";
   METRICS_BIND = cfg.listenAddress;
   METRICS_PORT = toString cfg.port;
   METRICS_ALLOWED_CLIENTS = lib.concatStringsSep "," cfg.allowedClients;

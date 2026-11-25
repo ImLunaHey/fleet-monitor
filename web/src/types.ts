@@ -75,7 +75,23 @@ export interface Zfs {
   drives?: Drive[];
   datasets?: Dataset[];
 }
+export interface ProcessReading {
+  pid: number;
+  name: string;
+  rss: number;
+  cpu: Reading;
+}
+export interface ProcessSnapshot {
+  available: boolean;
+  timestamp: number;
+  cpu_ready: boolean;
+  partial?: boolean;
+  memory: ProcessReading[];
+  cpu: ProcessReading[];
+  arc?: { size: number; limit: number } | null;
+}
 export interface Metrics {
+  processes?: ProcessSnapshot | null;
   hardware_model?: string;
   llm?: {
     available: boolean;
@@ -89,7 +105,7 @@ export interface Metrics {
   cpu_name: string;
   uptime: number;
   cpu: { usage?: Reading; temperature?: Reading };
-  memory: { used: number; total: number };
+  memory: { used: number; total: number; available?: Reading; swap_used?: Reading };
   disk: {
     used: number;
     total: number;
