@@ -48,6 +48,9 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci && npm run check
         working-directory: web
+      - name: Check passive kiosk and responsive layouts
+        run: npm run test:layout
+        working-directory: web
   release-tools:
     runs-on: ubuntu-latest
     steps:

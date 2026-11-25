@@ -334,3 +334,40 @@ startup. Everyone in an allowed subnet can read dashboard telemetry, so use a
 trusted LAN/VPN. Leave WAN port forwarding disabled. Phones must join an allowed
 network (guest Wi-Fi isolation can prevent access). QR generation needs no
 external service. Set `publicUrl = null` (the default) to hide the QR panel.
+
+### Top processes and ZFS cache
+
+Enable `services.fleet-monitor.processes.enable = true` on each agent whose
+processes you want to see (NixOS or nix-darwin). For a standalone agent, set
+`METRICS_PROCESSES=1`; the macOS installer also accepts this environment variable.
+The collector and dashboard both need this feature; while testing an unreleased
+commit, use its `collector-source` and `dashboard-source` Nix packages.
+
+Each host card always shows its top three memory users and top three CPU users
+side by side. There are no tabs or controls to operate on a passive kiosk. PIDs
+identify separate processes with the same name; child processes are not grouped.
+Memory is resident set size (RSS), not virtual address space or macOS physical
+footprint. Shared pages can appear in multiple processes, so these numbers must
+not be summed to explain total RAM. CPU is measured between samples and normalized
+to the machine's logical CPU count (100% = all CPUs busy), rather than a lifetime
+average. A new process needs two samples before its CPU rate is known. Process
+collection runs independently every five seconds with a three-second deadline;
+a failed or >15-second-old sample is shown as unavailable, not zero. Restricted
+process visibility is marked when detectable; exited processes are ignored.
+
+On Linux hosts with ZFS, the collector reads global ARC size and limit from
+`/proc/spl/kstat/zfs/arcstats`. The card shows ARC separately from processes,
+alongside OS available memory and swap used. ARC is kernel cache, not a process;
+it is not added to or blindly subtracted from the existing total-minus-available
+headline. These readings do not claim all ARC can be reclaimed immediately.
+No ZFS tuning or cache limits are changed.
+
+Collection is opt-in because executable basenames and PIDs become visible to
+allowed dashboard clients. Full paths, command arguments, environment variables
+and usernames are not returned or retained in snapshots. No process management controls are
+provided. Agents without the new field keep their existing card layout.
+
+`npm --prefix web run build && npm --prefix web run test:layout` checks a synthetic
+five-host fleet in headless Chrome. It asserts no overlapping contents at seven
+screen sizes, and verifies the full ZFS panel and tables fit without scrolling at
+2560×1440 and 3440×1440. Set `CHROME_PATH` to your browser executable if needed.

@@ -41,6 +41,7 @@ let inherit (lib) mkEnableOption mkOption types; in {
       apiKeyFile = mkOption { type = types.str; default = ""; description = "Runtime path to the API key; never put its contents in the Nix store. NixOS loads it as a systemd credential."; };
       certificateSha256 = mkOption { type = types.str; default = ""; description = "Optional SHA256 certificate pin for a local self-signed controller. Empty uses normal TLS verification."; };
     };
+    processes.enable = mkEnableOption "read-only top process memory/CPU telemetry (executable names and PIDs are exposed to allowed clients)";
     intelGPU = mkEnableOption "Intel i915 performance counters (CAP_PERFMON on Linux)";
     amdGpuName = mkOption { type = types.nullOr types.str; default = null; description = "Enable AMD sysfs telemetry and override its display name."; };
     zfsPool = mkOption { type = types.nullOr types.str; default = null; description = "Optional ZFS pool to monitor."; };

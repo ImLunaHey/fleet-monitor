@@ -341,6 +341,9 @@ func sample() {
 		data["hardware_model"] = machineModel
 		data["llm"] = llmSnapshot
 		data["zfs"] = zfsSnapshot
+		if os.Getenv("METRICS_PROCESSES") == "1" {
+			data["processes"] = processesSnapshot
+		}
 		snapshot = data
 		mu.Unlock()
 		previous = start
@@ -434,6 +437,9 @@ func main() {
 	}
 	_ = json.Unmarshal([]byte(env("DASHBOARD_PEERS", "{}")), &peerURLs)
 	go sample()
+	if os.Getenv("METRICS_PROCESSES") == "1" {
+		go processLoop()
+	}
 	if base := os.Getenv("LLAMA_URL"); base != "" {
 		go llmLoop(base)
 	}
